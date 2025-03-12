@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
-import polars as pl
 import numpy as np
+import polars as pl
+from typing import Dict, List, Tuple, Union
 
 def _print_verbose(message: str, warning: bool = False) -> None:
     """Prints a verbose message with optional warning."""
@@ -33,6 +34,66 @@ def _setup_plot_axes(ax: plt.Axes, x_col: str, y_col: str, plot_type: str, ax_se
     ax.set_xlim(ax_settings.get("xlim")) if "xlim" in ax_settings else None
     ax.set_ylim(ax_settings.get("ylim")) if "ylim" in ax_settings else None
 
+def _sort_groups(
+    data: pl.DataFrame,
+    group_by_cols: List[str] = None,
+    sort_order: List[Union[Tuple, str, int]] = None,
+) -> Dict[Tuple, pl.DataFrame]:
+    """
+    Sorts groups in a DataFrame based on a custom or default order, placing None groups last.
+
+    Args:
+        data: The Polars DataFrame to group and sort.
+        group_by_cols: List of columns to group by.
+        sort_order: List defining the desired order of groups.
+            If provided, groups not in the order are appended after.
+
+    Returns:
+        A dictionary where keys are group names (tuples) and values are DataFrames.
+    """
+
+    if group_by_cols:
+        grouped_data = {group_name: group_data for group_name, group_data in data.group_by(group_by_cols)}
+    else:
+        grouped_data = {(None,): data}
+
+    if sort_order:
+        # Normalize sort_order to a list of tuples
+        normalized_sort_order: List[Tuple] = [
+            (item,) if not isinstance(item, tuple) else item for item in sort_order
+        ]
+
+        sorted_groups: Dict[Tuple, pl.DataFrame] = {}
+        remaining_groups: Dict[Tuple, pl.DataFrame] = {}
+
+        for group_name in normalized_sort_order:
+            if group_name in grouped_data:
+                sorted_groups[group_name] = grouped_data.pop(group_name)
+
+        remaining_groups = {
+            group_name: group_data
+            for group_name, group_data in grouped_data.items()
+            if group_name != (None,)
+        }
+
+        if (None,) in grouped_data:
+            sorted_groups[(None,)] = grouped_data[(None,)]
+
+        sorted_groups.update(remaining_groups)
+        return sorted_groups
+
+    else:
+        def sort_key(item: Tuple[Tuple, pl.DataFrame]) -> Tuple[int, Union[Tuple, str, int, None]]:
+            group_name = item[0]
+            if group_name == (None,):
+                return (2, None)
+            elif isinstance(group_name, tuple):
+                return (0, group_name)
+            else:
+                return (1, group_name)
+
+        return dict(sorted(grouped_data.items(), key=sort_key))
+
 def generate_plot(
     data: pl.DataFrame,
     x_col: str,
@@ -44,6 +105,7 @@ def generate_plot(
     plot_settings: dict = None,
     verbose: bool = False,
     bins: int = 10,
+    sort_order: list= None,
     **ax_settings,
 ) -> plt.Axes:
     """Generates a plot from a Polars DataFrame."""
@@ -58,12 +120,8 @@ def generate_plot(
     ax = ax or plt.subplots()[1]
     plot_settings = plot_settings or {}
 
-    # Create a dictionary to hold the data, grouped if necessary, before aggregation
-    group_data_dict = (
-        {group_name: group_data for group_name, group_data in data.group_by(group_by_cols)}
-        if group_by_cols
-        else {None: data}
-    )
+    # Create a sorted dictionary to hold the data, grouped if necessary, before aggregation
+    pre_agg_data =_sort_groups(data, group_by_cols, sort_order=sort_order)
 
     # Apply aggregation if specified
     if agg_fct and y_col:
@@ -71,7 +129,9 @@ def generate_plot(
         data = data.group_by(over_columns).agg(agg_fct(y_col).alias(y_col)).sort(over_columns)
 
     # Iterate over groups (or the entire dataset if no grouping)
-    for group_name, group_data in data.group_by(group_by_cols) if group_by_cols else [(None, data)]:
+    sorted_groups =_sort_groups(data, group_by_cols, sort_order=sort_order)
+
+    for group_name, group_data in sorted_groups.items():
         x_values = group_data[x_col].to_numpy()
         y_values = group_data[y_col].to_numpy() if y_col else None
         group_label = ", ".join(map(str, group_name)) if isinstance(group_name, tuple) else str(group_name)
@@ -81,8 +141,8 @@ def generate_plot(
             ax.hist(x_values, bins=bins, label=group_label, **plot_settings)
             if verbose:
                 # Calculate and print verbose output for histograms
-                min_count, min_position = _get_min_count_info(group_data_dict[group_name], x_col, bins)
-                _print_verbose(f"  Group ({group_label}) uses {len(group_data_dict[group_name])} observations with fewest ({min_count}) at '{x_col}'={min_position}.", min_count <= 5)
+                min_count, min_position = _get_min_count_info(pre_agg_data[group_name], x_col, bins)
+                _print_verbose(f"  Group ({group_label}) uses {len(pre_agg_data[group_name])} observations with fewest ({min_count}) at '{x_col}'={min_position}.", min_count <= 5)
         else:
             plot_func = getattr(ax, plot_type)
             if y_col:
@@ -91,8 +151,8 @@ def generate_plot(
                 plot_func(x_values, label=group_label, **plot_settings)
             if verbose:
                 # Calculate and print verbose output for other plot types
-                min_count, min_position = _get_min_count_info(group_data_dict[group_name], x_col)
-                _print_verbose(f"  Group ({group_label}) uses {len(group_data_dict[group_name])} observations with fewest ({min_count}) at '{x_col}'={min_position}.", min_count <= 5)
+                min_count, min_position = _get_min_count_info(pre_agg_data[group_name], x_col)
+                _print_verbose(f"  Group ({group_label}) uses {len(pre_agg_data[group_name])} observations with fewest ({min_count}) at '{x_col}'={min_position}.", min_count <= 5)
 
     # Add legend if grouping was used
     if group_by_cols:
