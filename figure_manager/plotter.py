@@ -165,3 +165,45 @@ def generate_plot(
     # Setup the plot axes with labels, title, and limits
     _setup_plot_axes(ax, x_col, y_col, plot_type, ax_settings)
     return ax
+
+def generate_plot_with_error(
+    x: pl.Series,
+    y: pl.Series,
+    y_err: Union[pl.Series, Tuple[pl.Series, pl.Series]] = None,
+    plot_type: str = "plot",
+    ax: plt.Axes = None,
+    plot_settings: dict = None,
+    **ax_settings,
+) -> plt.Axes:
+    """Generates a plot with error bars or confidence intervals from Polars Series."""
+    
+    # Input validation
+    if not isinstance(x, pl.Series) or not isinstance(y, pl.Series):
+        raise TypeError("x and y must be Polars Series.")
+    if y_err is not None:
+        if isinstance(y_err, pl.Series) and not isinstance(y_err, pl.Series):
+            raise TypeError("y_err must be a Polars Series or a tuple of Polars Series.")
+        if isinstance(y_err, tuple) and (len(y_err) != 2 or not all(isinstance(e, pl.Series) for e in y_err)):
+            raise TypeError("y_err must be a tuple of two Polars Series.")
+
+    ax = ax or plt.subplots()[1]
+    plot_settings = plot_settings or {}
+
+    # Generate the plot based on the plot_type
+    plot_func = getattr(ax, plot_type)
+    x_np, y_np = x.to_numpy(), y.to_numpy()
+
+    if isinstance(y_err, pl.Series):
+        # set default format for error bars
+        plot_settings.setdefault("capsize", 3)
+        ax.errorbar(x_np, y_np, yerr=y_err.to_numpy(), label="y_err", **plot_settings)
+    elif isinstance(y_err, tuple):
+        y_ci_low, y_ci_high = y_err
+        plot_func(x_np, y_np, label="y", **plot_settings)
+        ax.fill_between(x_np, y_ci_low.to_numpy(), y_ci_high.to_numpy(), label="y_ci", alpha=0.3, **plot_settings)
+    else:
+        plot_func(x_np, y_np, label="y", **plot_settings)
+
+    # Setup the plot axes with labels, title, and limits
+    _setup_plot_axes(ax, x.name, y.name, plot_type, ax_settings)
+    return ax
