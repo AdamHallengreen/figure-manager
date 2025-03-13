@@ -52,10 +52,7 @@ def _sort_groups(
         A dictionary where keys are group names (tuples) and values are DataFrames.
     """
 
-    if group_by_cols:
-        grouped_data = {group_name: group_data for group_name, group_data in data.group_by(group_by_cols)}
-    else:
-        grouped_data = {(None,): data}
+    grouped_data = {group_name: group_data for group_name, group_data in data.group_by(group_by_cols)}
 
     if sort_order:
         # Normalize sort_order to a list of tuples
@@ -102,6 +99,7 @@ def generate_plot(
     group_by_cols: list = None,
     agg_fct=None,
     ax: plt.Axes = None,
+    label = None,
     plot_settings: dict = None,
     verbose: bool = False,
     bins: int = 10,
@@ -120,8 +118,11 @@ def generate_plot(
     ax = ax or plt.subplots()[1]
     plot_settings = plot_settings or {}
 
-    # Create a sorted dictionary to hold the data, grouped if necessary, before aggregation
-    pre_agg_data =_sort_groups(data, group_by_cols, sort_order=sort_order)
+    # Handle case where no grouping is specified
+    if not group_by_cols:
+        pre_agg_data = {(label,): data}
+    else:
+        pre_agg_data = _sort_groups(data, group_by_cols, sort_order=sort_order)
 
     # Apply aggregation if specified
     if agg_fct and y_col:
@@ -129,7 +130,10 @@ def generate_plot(
         data = data.group_by(over_columns).agg(agg_fct(y_col).alias(y_col)).sort(over_columns)
 
     # Iterate over groups (or the entire dataset if no grouping)
-    sorted_groups =_sort_groups(data, group_by_cols, sort_order=sort_order)
+    if not group_by_cols:
+        sorted_groups = {(label,): data}
+    else:
+        sorted_groups = _sort_groups(data, group_by_cols, sort_order=sort_order)
 
     for group_name, group_data in sorted_groups.items():
         x_values = group_data[x_col].to_numpy()
@@ -154,8 +158,8 @@ def generate_plot(
                 min_count, min_position = _get_min_count_info(pre_agg_data[group_name], x_col)
                 _print_verbose(f"  Group ({group_label}) uses {len(pre_agg_data[group_name])} observations with fewest ({min_count}) at '{x_col}'={min_position}.", min_count <= 5)
 
-    # Add legend if grouping was used
-    if group_by_cols:
+    # Add legend if grouping was used or label is provided
+    if group_by_cols or label:
         ax.legend()
 
     # Print a newline for better readability of verbose output
@@ -172,6 +176,7 @@ def generate_plot_with_error(
     y_err: Union[pl.Series, Tuple[pl.Series, pl.Series]] = None,
     plot_type: str = "plot",
     ax: plt.Axes = None,
+    label = None,
     plot_settings: dict = None,
     **ax_settings,
 ) -> plt.Axes:
@@ -196,14 +201,17 @@ def generate_plot_with_error(
     if isinstance(y_err, pl.Series):
         # set default format for error bars
         plot_settings.setdefault("capsize", 3)
-        ax.errorbar(x_np, y_np, yerr=y_err.to_numpy(), label="y_err", **plot_settings)
+        ax.errorbar(x_np, y_np, yerr=y_err.to_numpy(), label=label, **plot_settings)
     elif isinstance(y_err, tuple):
         y_ci_low, y_ci_high = y_err
-        plot_func(x_np, y_np, label="y", **plot_settings)
-        ax.fill_between(x_np, y_ci_low.to_numpy(), y_ci_high.to_numpy(), label="y_ci", alpha=0.3, **plot_settings)
+        plot_func(x_np, y_np, label=label, **plot_settings)
+        ax.fill_between(x_np, y_ci_low.to_numpy(), y_ci_high.to_numpy(), alpha=0.3, **plot_settings)
     else:
-        plot_func(x_np, y_np, label="y", **plot_settings)
+        plot_func(x_np, y_np, label=label, **plot_settings)
 
     # Setup the plot axes with labels, title, and limits
     _setup_plot_axes(ax, x.name, y.name, plot_type, ax_settings)
+    
+    if label:
+        ax.legend()
     return ax
