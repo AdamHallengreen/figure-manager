@@ -1,0 +1,16 @@
+stages:
+  make_figures:
+    cmd: python src/produce_figures.py --params params.yaml
+    deps:
+    - data/Males.csv
+    outs:
+    - outputs/figures/three_small_plots.pdf
+    - outputs/figures/three_small_plots_subplot_2.pdf 
+    - outputs/figures/three_small_plots_subplot_1.pdf 
+    - outputs/figures/three_small_plots_subplot_3.pdf 
+    - outputs/figures/two_std_dev_plots_subplot_1.pdf 
+    - outputs/figures/two_std_dev_plots_subplot_2.pdf 
+    - outputs/figures/two_std_dev_plots.pdf
+    metrics:
+    - metrics.json:
+        cache: False

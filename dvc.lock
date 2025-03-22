@@ -1,0 +1,38 @@
+schema: '2.0'
+stages:
+  make_figures:
+    cmd: python src/produce_figures.py --params params.yaml
+    deps:
+    - path: data/Males.csv
+      hash: md5
+      md5: 1e89aefc945582fa01d8e352090cc826
+      size: 426268
+    outs:
+    - path: outputs/figures/three_small_plots.pdf
+      hash: md5
+      md5: 952f41c378f2a48e581177a5acd8da1e
+      size: 24346
+    - path: outputs/figures/three_small_plots_subplot_1.pdf
+      hash: md5
+      md5: df9aada337646e3a68a0a27a520a30f7
+      size: 22623
+    - path: outputs/figures/three_small_plots_subplot_2.pdf
+      hash: md5
+      md5: ee2ff727458c9484b15b54eb08df23cc
+      size: 23074
+    - path: outputs/figures/three_small_plots_subplot_3.pdf
+      hash: md5
+      md5: b6b13b2361a70acb0f66373ae51c6705
+      size: 21428
+    - path: outputs/figures/two_std_dev_plots.pdf
+      hash: md5
+      md5: 02b6cbe9e58cb42d616a94b42509f857
+      size: 18830
+    - path: outputs/figures/two_std_dev_plots_subplot_1.pdf
+      hash: md5
+      md5: b84d13a808bb6a00bacda409806afbb8
+      size: 18213
+    - path: outputs/figures/two_std_dev_plots_subplot_2.pdf
+      hash: md5
+      md5: ee51d99b0ff3d815b2ea00576aeeb577
+      size: 17254
