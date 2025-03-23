@@ -30,6 +30,6 @@ jobs:
         run: |
           dvc repro
           dvc metrics show --md > report.md
-          echo '![](./outputs/figures/three_small_plots.pdf "Main plot")' >> report.md
-          echo '![](./outputs/figures/two_std_dev_plots.pdf "Std. plot")' >> report.md
+          echo '![](./outputs/figures/three_small_plots.png "Main plot")' >> report.md
+          echo '![](./outputs/figures/two_std_dev_plots.png "Std. plot")' >> report.md
           cml comment create report.md
