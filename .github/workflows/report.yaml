@@ -40,20 +40,19 @@ jobs:
         run: |
           mogrify -format png outputs/figures/three_small_plots.pdf
           mogrify -format png outputs/figures/two_std_dev_plots.pdf
-          echo "FILE_EXT=.png" >> $GITHUB_ENV
+          echo "FILE_EXT=.png" >> $GITHUB_OUTPUT
 
       - name: Create report
         env:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FILE_EXT: ${{ env.FILE_EXT }}
         run: |
           echo "# Parameters" > report.md
           dvc metrics show --md >> report.md
 
           echo "# Main Plot" >> report.md
-          echo "![](./outputs/figures/three_small_plots${FILE_EXT} \"Main plot\")" >> report.md
+          echo "![](./outputs/figures/three_small_plots${{ steps.get_ext.outputs.FILE_EXT }} \"Main plot\")" >> report.md
           
           echo "# Standard Deviation Plot" >> report.md
-          echo "![](./outputs/figures/two_std_dev_plots${FILE_EXT} \"Std. plot\")" >> report.md
+          echo "![](./outputs/figures/two_std_dev_plots${{ steps.get_ext.outputs.FILE_EXT }} \"Std. plot\")" >> report.md
           
           cml comment create report.md
