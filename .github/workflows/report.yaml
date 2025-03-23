@@ -40,7 +40,7 @@ jobs:
             mogrify -format png outputs/figures/two_std_dev_plots.pdf
             echo "FILE_EXT=.png" >> $GITHUB_OUTPUT
           fi
-          
+
       - name: List files in outputs/figures
         run: ls -l outputs/figures/
 
@@ -54,9 +54,9 @@ jobs:
           dvc metrics show --md >> report.md
 
           echo "# Main Plot" >> report.md
-          echo "!(./outputs/figures/three_small_plots${{ steps.get_ext.outputs.FILE_EXT }} \"Main plot\")" >> report.md
+          echo "![Main Plot failed to display](./outputs/figures/three_small_plots${{ steps.get_ext.outputs.FILE_EXT }} \"Main plot\")" >> report.md
 
           echo "# Standard Deviation Plot" >> report.md
-          echo "!(./outputs/figures/two_std_dev_plots${{ steps.get_ext.outputs.FILE_EXT }} \"Std. plot\")" >> report.md
+          echo "![Standard Deviation Plot failed to display](./outputs/figures/two_std_dev_plots${{ steps.get_ext.outputs.FILE_EXT }} \"Std. plot\")" >> report.md
 
           cml comment create report.md
