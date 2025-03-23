@@ -42,10 +42,14 @@ jobs:
           mogrify -format png outputs/figures/two_std_dev_plots.pdf
           echo "FILE_EXT=.png" >> $GITHUB_OUTPUT
 
+      - name: List files in outputs/figures
+        run: ls -l outputs/figures/
+        
       - name: Create report
         env:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          echo "FILE_EXT: ${{ steps.get_ext.outputs.FILE_EXT }}"
           echo "# Parameters" > report.md
           dvc metrics show --md >> report.md
 
