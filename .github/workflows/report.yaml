@@ -24,12 +24,12 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Train model
+      - name: Create figures
         env:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           dvc repro
           dvc metrics show --md > report.md
-          echo '![](./three_small_plots.pdf "Main plot")' >> report.md
-          echo '![](./two_std_dev_plots.pdf "Std. plot")' >> report.md
+          echo '![](./outputs/figures/three_small_plots.pdf "Main plot")' >> report.md
+          echo '![](./outputs/figures/two_std_dev_plots.pdf "Std. plot")' >> report.md
           cml comment create report.md
