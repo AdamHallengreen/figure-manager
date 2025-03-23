@@ -1,4 +1,4 @@
-name: model-training
+name: Report
 on: [push]
 jobs:
   run:
@@ -24,12 +24,24 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Get file extension from params.yaml
+        id: get_ext
+        run: |
+          echo "FILE_EXT=$(yq '.figure_manager.file_ext' params.yaml)" >> $GITHUB_OUTPUT
+
       - name: Create figures
         env:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           dvc repro
-          dvc metrics show --md > report.md
-          echo '![](./outputs/figures/three_small_plots.png "Main plot")' >> report.md
-          echo '![](./outputs/figures/two_std_dev_plots.png "Std. plot")' >> report.md
+
+          echo "# Parameters" > report.md
+          dvc metrics show --md >> report.md
+
+          echo "# Main Plot" >> report.md
+          echo "![](./outputs/figures/three_small_plots${{ steps.get_ext.outputs.FILE_EXT }} \"Main plot\")" >> report.md
+          
+          echo "# Standard Deviation Plot" >> report.md
+          echo "![](./outputs/figures/two_std_dev_plots${{ steps.get_ext.outputs.FILE_EXT }} \"Std. plot\")" >> report.md
+          
           cml comment create report.md
