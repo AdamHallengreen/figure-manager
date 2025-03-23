@@ -5,18 +5,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-      - uses: iterative/setup-cml@v1
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Kerberos libraries
+        run: sudo apt-get update && sudo apt-get install -y libkrb5-dev
+
+      - name: Set up CML
+        uses: iterative/setup-cml@v1
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
       - name: Train model
         env:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          pip install -r requirements.txt
           dvc repro
-
-          git fetch --prune
-
           dvc metrics show --md > report.md
-          echo "![](./three_small_plots.pdf "Main plot")" >> report.md
-          echo "![](./two_std_dev_plots.pdf "Std. plot")" >> report.md
+          echo '![](./three_small_plots.pdf "Main plot")' >> report.md
+          echo '![](./two_std_dev_plots.pdf "Std. plot")' >> report.md
           cml comment create report.md
