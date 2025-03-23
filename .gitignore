@@ -1,6 +1,3 @@
-# Figures in examples/figures folder
-examples/figures/
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -172,5 +169,5 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
-/data
-/outputs
+
+# DVC
