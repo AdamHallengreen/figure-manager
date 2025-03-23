@@ -1,3 +1,5 @@
-external_data_path: data/
-use_latex: false
-verbose: true
+{
+    "verbose": true,
+    "external_data_path": "data/",
+    "use_latex": false
+}

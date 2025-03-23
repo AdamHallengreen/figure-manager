@@ -18,3 +18,5 @@ stages:
     - outputs/figures/two_std_dev_plots_subplot_1.pdf 
     - outputs/figures/two_std_dev_plots_subplot_2.pdf 
     - outputs/figures/two_std_dev_plots.pdf
+metrics:
+  - metrics.json

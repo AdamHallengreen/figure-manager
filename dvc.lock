@@ -18,29 +18,29 @@ stages:
     outs:
     - path: outputs/figures/three_small_plots.pdf
       hash: md5
-      md5: 5f01de8507e96c632a23de036f7a9c23
+      md5: ede87c49efa1fcfee4d9f64af22296ec
       size: 24361
     - path: outputs/figures/three_small_plots_subplot_1.pdf
       hash: md5
-      md5: 9a278c8e978da2a3fe01edbce4d7ba3a
+      md5: 8f912a369ee2df097643810171e8fa65
       size: 22618
     - path: outputs/figures/three_small_plots_subplot_2.pdf
       hash: md5
-      md5: af56ca3851b7187f2b6c9f75c2700df6
+      md5: b2403c2efb88b5b1b81e9717aa81dee6
       size: 23103
     - path: outputs/figures/three_small_plots_subplot_3.pdf
       hash: md5
-      md5: 4401e465806c2a63017e07574c50871a
+      md5: d8eca601b15bf15900dc48e73fe35bef
       size: 21403
     - path: outputs/figures/two_std_dev_plots.pdf
       hash: md5
-      md5: 065edbeef0a2611d7e33e13ed9a5a1c0
+      md5: 3eba6525c289bf45e4b31fec7ccbed24
       size: 18831
     - path: outputs/figures/two_std_dev_plots_subplot_1.pdf
       hash: md5
-      md5: 91581bc14cef5be5f45999d3e333ff39
+      md5: 1cb4fcd4a6b16256299661f3854bf9a1
       size: 18245
     - path: outputs/figures/two_std_dev_plots_subplot_2.pdf
       hash: md5
-      md5: ba330bf71fbb9fd2942916702c78b27b
+      md5: 4c93c9eb40b9a16b876df161a8e9c600
       size: 17276

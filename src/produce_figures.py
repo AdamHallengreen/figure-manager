@@ -1,6 +1,7 @@
 import argparse
 import polars as pl
 from polars import col as c
+import json
 import yaml
 
 from figure_manager import FigureManager
@@ -77,7 +78,7 @@ if __name__ == '__main__':
     metrics['external_data_path'] = EXTERNAL_DATA_PATH
     metrics['use_latex'] = USE_LATEX
     with open(PROJECT_ROOT / 'metrics.json', 'w') as metrics_file:
-        yaml.dump(metrics, metrics_file)
+        json.dump(metrics, metrics_file, indent=4)
     # Call the make_figures function to generate the figures
     
     make_figures(EXTERNAL_DATA_PATH, FIGURES_DIR, PAPER_SIZE, FILE_EXT, USE_LATEX, VERBOSE)
