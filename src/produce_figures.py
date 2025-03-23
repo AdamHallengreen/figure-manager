@@ -71,4 +71,13 @@ if __name__ == '__main__':
     USE_LATEX: bool = params['figure_manager']['use_latex']
     VERBOSE: bool = params['plotter']['verbose']
     
+    # output 4 random key value pairs to a metrics.json file
+    # to be used by the CI/CD pipeline
+    metrics = {k: v for k, v in params['plotter'].items() if k in ['verbose', 'figures_dir', 'paper_size', 'file_ext']}
+    metrics['external_data_path'] = EXTERNAL_DATA_PATH
+    metrics['use_latex'] = USE_LATEX
+    with open(PROJECT_ROOT / 'metrics.json', 'w') as metrics_file:
+        yaml.dump(metrics, metrics_file)
+    # Call the make_figures function to generate the figures
+    
     make_figures(EXTERNAL_DATA_PATH, FIGURES_DIR, PAPER_SIZE, FILE_EXT, USE_LATEX, VERBOSE)
