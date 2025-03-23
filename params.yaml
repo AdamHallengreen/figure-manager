@@ -8,4 +8,4 @@ figure_manager:
   use_latex: False
   
 plotter:
-  verbose: True
+  verbose: False
