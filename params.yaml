@@ -1,0 +1,11 @@
+data_etl:
+  external_data_path: data/
+
+figure_manager:
+  figures_dir: outputs/figures
+  paper_size: A4
+  file_ext: .pdf
+  use_latex: False
+  
+plotter:
+  verbose: False
