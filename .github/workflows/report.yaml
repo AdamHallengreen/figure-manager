@@ -35,7 +35,7 @@ jobs:
           FILE_EXT=$(yq '.figure_manager.file_ext' params.yaml)
           echo "FILE_EXT=$FILE_EXT" # Debug output
 
-          if [[ "$FILE_EXT" == ".pdf" ]]; then
+          if [[ "$FILE_EXT" == '".pdf"' ]]; then
             echo "In IF" # Debug output
             mogrify -format png outputs/figures/three_small_plots.pdf
             mogrify -format png outputs/figures/two_std_dev_plots.pdf
