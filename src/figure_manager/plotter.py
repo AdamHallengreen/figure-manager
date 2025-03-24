@@ -91,127 +91,179 @@ def _sort_groups(
 
         return dict(sorted(grouped_data.items(), key=sort_key))
 
+def _prepare_plot_data(
+        data: Union[pl.DataFrame, pl.Series],
+        x_col: str = None,
+        y_col: str = None,
+        group_by_cols: list = None,
+        sort_order: list = None,
+        agg_fct=None,
+        bins: int = None,
+        label=None,
+        verbose: bool = False,
+    ) -> Tuple[Dict[Tuple, pl.DataFrame], Dict[Tuple, pl.DataFrame]]:
+        """Prepares and sorts data for plotting."""
+        if isinstance(data, pl.DataFrame):
+            group_by_cols = [group_by_cols] if isinstance(group_by_cols, str) else group_by_cols
+
+            if not group_by_cols:
+                pre_agg_data = {(label,): data}
+            else:
+                pre_agg_data = _sort_groups(data, group_by_cols, sort_order=sort_order)
+
+            if agg_fct and y_col:
+                over_columns = [x_col] + (group_by_cols or [])
+                data = data.group_by(over_columns).agg(agg_fct(y_col).alias(y_col)).sort(over_columns)
+
+            if not group_by_cols:
+                sorted_groups = {(label,): data}
+            else:
+                sorted_groups = _sort_groups(data, group_by_cols, sort_order=sort_order)
+
+            return pre_agg_data, sorted_groups
+        else:
+            return {}, {(label,): data}
+
 def generate_plot(
     data: pl.DataFrame,
-    x_col: str,
-    y_col: str = None,
+    x: str,
+    y: str = None,
     plot_type: str = "plot",
-    group_by_cols: list = None,
+    group_by: list = None,
     agg_fct=None,
     ax: plt.Axes = None,
-    label = None,
+    label=None,
     plot_settings: dict = None,
     verbose: bool = False,
     bins: int = 10,
-    sort_order: list= None,
+    sort_order: list = None,
+    y_err: str = None,
     **ax_settings,
 ) -> plt.Axes:
-    """Generates a plot from a Polars DataFrame."""
+    """
+    Generates a plot from a Polars DataFrame with optional error bars or confidence intervals.
 
-    # Input validation and basic setup
+    Parameters:
+        data (pl.DataFrame): The input data as a Polars DataFrame.
+        x (str): The column name to use for the x-axis.
+        y (str, optional): The column name to use for the y-axis. Required for most plot types except histograms.
+        plot_type (str, optional): The type of plot to generate (e.g., "plot", "scatter", "bar", "hist"). Defaults to "plot".
+        group_by (list, optional): A list of column names to group the data by before plotting.
+        agg_fct (callable, optional): An aggregation function to apply to grouped data.
+        ax (plt.Axes, optional): A Matplotlib Axes object to plot on. If not provided, a new Axes will be created.
+        label (str, optional): A label for the plot. Used in the legend if provided.
+        plot_settings (dict, optional): Additional keyword arguments to customize the plot (e.g., color, linestyle).
+        verbose (bool, optional): If True, prints detailed information about the plotting process. Defaults to False.
+        bins (int, optional): The number of bins to use for histograms. Defaults to 10.
+        sort_order (list, optional): A list specifying the order of groups for plotting.
+        y_err (str or list/tuple, optional): Column name(s) for error bars or confidence intervals. 
+            If a string, it specifies the column for symmetric error bars. 
+            If a tuple/list, it should contain two column names for lower and upper bounds of confidence intervals.
+        **ax_settings: Additional keyword arguments for customizing the Axes (e.g., axis labels, limits).
+
+    Returns:
+        plt.Axes: The Matplotlib Axes object containing the plot.
+
+    Raises:
+        TypeError: If `data` is not a Polars DataFrame, or if `y_err` is not a valid type.
+        ValueError: If `x`, `y`, or `y_err` are not valid column names in the DataFrame.
+
+    Notes:
+        - If `group_by` is provided, the data will be grouped, and a separate plot will be created for each group.
+        - For histograms, only `x` is required, and `y` is ignored.
+        - If `y_err` is provided, error bars or confidence intervals will be added to the plot.
+        - The function supports verbose mode to provide detailed insights into the data and plotting process.
+
+    Example:
+        ```python
+        import matplotlib.pyplot as plt
+
+        # Example DataFrame
+        df = pl.DataFrame({
+            "x": [1, 2, 3, 4, 5],
+            "y": [2, 4, 6, 8, 10],
+            "group": ["A", "A", "B", "B", "B"]
+        })
+
+        # Generate a grouped line plot
+        fig, ax = plt.subplots()
+        generate_plot(
+            data=df,
+            x="x",
+            y="y",
+            group_by=["group"],
+            plot_type="plot",
+            ax=ax,
+            verbose=True
+        )
+        plt.show()
+        ```
+    """
     if not isinstance(data, pl.DataFrame):
         raise TypeError("Data must be a Polars DataFrame.")
-    if x_col not in data.columns or (y_col and y_col not in data.columns and plot_type != "hist"):
-        raise ValueError("x_col and y_col must be valid column names.")
+    if x not in data.columns:
+        raise ValueError("x must be a valid column name.")
+    if y and y not in data.columns and plot_type != "hist":
+        raise ValueError("y must be a valid column name.")
+    if isinstance(y_err, str):
+        if y_err not in data.columns:
+            raise ValueError("y_err must be a valid column name if provided.")
+    elif isinstance(y_err, (tuple, list)):
+        if not all(isinstance(col, str) and col in data.columns for col in y_err):
+            raise ValueError("All entries in y_err must be valid column names if provided.")
 
-    group_by_cols = [group_by_cols] if isinstance(group_by_cols, str) else group_by_cols
     ax = ax or plt.subplots()[1]
     plot_settings = plot_settings or {}
 
-    # Handle case where no grouping is specified
-    if not group_by_cols:
-        pre_agg_data = {(label,): data}
-    else:
-        pre_agg_data = _sort_groups(data, group_by_cols, sort_order=sort_order)
-
-    # Apply aggregation if specified
-    if agg_fct and y_col:
-        over_columns = [x_col] + (group_by_cols or [])
-        data = data.group_by(over_columns).agg(agg_fct(y_col).alias(y_col)).sort(over_columns)
-
-    # Iterate over groups (or the entire dataset if no grouping)
-    if not group_by_cols:
-        sorted_groups = {(label,): data}
-    else:
-        sorted_groups = _sort_groups(data, group_by_cols, sort_order=sort_order)
+    pre_agg_data, sorted_groups = _prepare_plot_data(
+        data, x, y, group_by, sort_order, agg_fct, bins, label, verbose
+    )
 
     for group_name, group_data in sorted_groups.items():
-        x_values = group_data[x_col].to_numpy()
-        y_values = group_data[y_col].to_numpy() if y_col else None
+        x_values = group_data[x].to_numpy()
+        y_values = group_data[y].to_numpy() if y else None
         group_label = ", ".join(map(str, group_name)) if isinstance(group_name, tuple) else str(group_name)
 
-        # Generate the plot based on the plot_type
         if plot_type == "hist":
             ax.hist(x_values, bins=bins, label=group_label, **plot_settings)
             if verbose:
-                # Calculate and print verbose output for histograms
-                min_count, min_position = _get_min_count_info(pre_agg_data[group_name], x_col, bins)
-                _print_verbose(f"  Group ({group_label}) uses {len(pre_agg_data[group_name])} observations with fewest ({min_count}) at '{x_col}'={min_position}.", min_count <= 5)
+                min_count, min_position = _get_min_count_info(pre_agg_data[group_name], x, bins)
+                _print_verbose(
+                    f"  Group ({group_label}) uses {len(pre_agg_data[group_name])} observations with fewest ({min_count}) at '{x}'={min_position}.",
+                    min_count <= 5,
+                )
         else:
             plot_func = getattr(ax, plot_type)
-            if y_col:
-                plot_func(x_values, y_values, label=group_label, **plot_settings)
+            if y:
+                if y_err:
+                    if isinstance(y_err, str):
+                        y_err_values = group_data[y_err].to_numpy()
+                        plot_settings.setdefault("capsize", 3)
+                        ax.errorbar(x_values, y_values, yerr=y_err_values, label=group_label, **plot_settings)
+                    elif isinstance(y_err, (tuple, list)):
+                        y_ci_low  = group_data[y_err[0]].to_numpy()
+                        y_ci_high = group_data[y_err[1]].to_numpy()
+                        plot_func(x_values, y_values, label=group_label, **plot_settings)
+                        ax.fill_between(x_values, y_ci_low, y_ci_high, alpha=0.3, **plot_settings)
+                    else:
+                        raise TypeError("y_err must be a string, a tuple of strings, or a Polars Series.")
+                else:
+                    plot_func(x_values, y_values, label=group_label, **plot_settings)
             else:
                 plot_func(x_values, label=group_label, **plot_settings)
-            if verbose:
-                # Calculate and print verbose output for other plot types
-                min_count, min_position = _get_min_count_info(pre_agg_data[group_name], x_col)
-                _print_verbose(f"  Group ({group_label}) uses {len(pre_agg_data[group_name])} observations with fewest ({min_count}) at '{x_col}'={min_position}.", min_count <= 5)
 
-    # Add legend if grouping was used or label is provided
-    if group_by_cols or label:
+            if verbose:
+                min_count, min_position = _get_min_count_info(pre_agg_data[group_name], x)
+                _print_verbose(
+                    f"  Group ({group_label}) uses {len(pre_agg_data[group_name])} observations with fewest ({min_count}) at '{x}'={min_position}.",
+                    min_count <= 5,
+                )
+
+    if group_by or label:
         ax.legend()
 
-    # Print a newline for better readability of verbose output
     if verbose:
         print("")
 
-    # Setup the plot axes with labels, title, and limits
-    _setup_plot_axes(ax, x_col, y_col, plot_type, ax_settings)
-    return ax
-
-def generate_plot_with_error(
-    x: pl.Series,
-    y: pl.Series,
-    y_err: Union[pl.Series, Tuple[pl.Series, pl.Series]] = None,
-    plot_type: str = "plot",
-    ax: plt.Axes = None,
-    label = None,
-    plot_settings: dict = None,
-    **ax_settings,
-) -> plt.Axes:
-    """Generates a plot with error bars or confidence intervals from Polars Series."""
-    
-    # Input validation
-    if not isinstance(x, pl.Series) or not isinstance(y, pl.Series):
-        raise TypeError("x and y must be Polars Series.")
-    if y_err is not None:
-        if isinstance(y_err, pl.Series) and not isinstance(y_err, pl.Series):
-            raise TypeError("y_err must be a Polars Series or a tuple of Polars Series.")
-        if isinstance(y_err, tuple) and (len(y_err) != 2 or not all(isinstance(e, pl.Series) for e in y_err)):
-            raise TypeError("y_err must be a tuple of two Polars Series.")
-
-    ax = ax or plt.subplots()[1]
-    plot_settings = plot_settings or {}
-
-    # Generate the plot based on the plot_type
-    plot_func = getattr(ax, plot_type)
-    x_np, y_np = x.to_numpy(), y.to_numpy()
-
-    if isinstance(y_err, pl.Series):
-        # set default format for error bars
-        plot_settings.setdefault("capsize", 3)
-        ax.errorbar(x_np, y_np, yerr=y_err.to_numpy(), label=label, **plot_settings)
-    elif isinstance(y_err, tuple):
-        y_ci_low, y_ci_high = y_err
-        plot_func(x_np, y_np, label=label, **plot_settings)
-        ax.fill_between(x_np, y_ci_low.to_numpy(), y_ci_high.to_numpy(), alpha=0.3, **plot_settings)
-    else:
-        plot_func(x_np, y_np, label=label, **plot_settings)
-
-    # Setup the plot axes with labels, title, and limits
-    _setup_plot_axes(ax, x.name, y.name, plot_type, ax_settings)
-    
-    if label:
-        ax.legend()
+    _setup_plot_axes(ax, x, y, plot_type, ax_settings)
     return ax
