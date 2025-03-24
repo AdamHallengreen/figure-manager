@@ -14,33 +14,33 @@ stages:
         figure_manager.file_ext: .pdf
         figure_manager.paper_size: A4
         figure_manager.use_latex: false
-        plotter.verbose: true
+        plotter.verbose: false
     outs:
     - path: outputs/figures/three_small_plots.pdf
       hash: md5
-      md5: ede87c49efa1fcfee4d9f64af22296ec
+      md5: 58f0ef4f18774e7ab5afabd6a04f6a8e
       size: 24361
     - path: outputs/figures/three_small_plots_subplot_1.pdf
       hash: md5
-      md5: 8f912a369ee2df097643810171e8fa65
+      md5: 0508518765e44d5ca775fd291523c3f2
       size: 22618
     - path: outputs/figures/three_small_plots_subplot_2.pdf
       hash: md5
-      md5: b2403c2efb88b5b1b81e9717aa81dee6
+      md5: 1ac1d8513861772fa35d0b849a7d4017
       size: 23103
     - path: outputs/figures/three_small_plots_subplot_3.pdf
       hash: md5
-      md5: d8eca601b15bf15900dc48e73fe35bef
+      md5: 3a8ff58be94043192b4a450440959e58
       size: 21403
     - path: outputs/figures/two_std_dev_plots.pdf
       hash: md5
-      md5: 3eba6525c289bf45e4b31fec7ccbed24
-      size: 18831
+      md5: 7923e29b40f9fce2722161634e3a9781
+      size: 17774
     - path: outputs/figures/two_std_dev_plots_subplot_1.pdf
       hash: md5
-      md5: 1cb4fcd4a6b16256299661f3854bf9a1
-      size: 18245
+      md5: 5fa7738167cf795174440b5dc05000be
+      size: 17240
     - path: outputs/figures/two_std_dev_plots_subplot_2.pdf
       hash: md5
-      md5: 4c93c9eb40b9a16b876df161a8e9c600
-      size: 17276
+      md5: 6e8f6dbbf16265217d6fb492537489f1
+      size: 16289
