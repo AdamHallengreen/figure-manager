@@ -11,12 +11,12 @@ stages:
     - figure_manager.use_latex
     - plotter.verbose
     outs:
-    - outputs/figures/three_small_plots.pdf
-    - outputs/figures/three_small_plots_subplot_2.pdf 
-    - outputs/figures/three_small_plots_subplot_1.pdf 
-    - outputs/figures/three_small_plots_subplot_3.pdf 
-    - outputs/figures/two_std_dev_plots_subplot_1.pdf 
-    - outputs/figures/two_std_dev_plots_subplot_2.pdf 
-    - outputs/figures/two_std_dev_plots.pdf
+    - outputs/figures/three_small_plots${figure_manager.file_ext}
+    - outputs/figures/three_small_plots_subplot_2${figure_manager.file_ext} 
+    - outputs/figures/three_small_plots_subplot_1${figure_manager.file_ext} 
+    - outputs/figures/three_small_plots_subplot_3${figure_manager.file_ext} 
+    - outputs/figures/two_std_dev_plots_subplot_1${figure_manager.file_ext} 
+    - outputs/figures/two_std_dev_plots_subplot_2${figure_manager.file_ext} 
+    - outputs/figures/two_std_dev_plots${figure_manager.file_ext}
 metrics:
   - metrics.json

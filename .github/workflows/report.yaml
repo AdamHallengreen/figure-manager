@@ -1,22 +1,58 @@
-name: model-training
+name: Report
 on: [push]
 jobs:
   run:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-      - uses: iterative/setup-cml@v1
-      - name: Train model
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libkrb5-dev yq imagemagick
+
+      - name: Set up CML
+        uses: iterative/setup-cml@v1
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create output
+        run: dvc repro
+
+      - name: Get file extension and convert PDF if needed
+        id: get_ext
+        run: |
+          FILE_EXT=$(yq '.figure_manager.file_ext' params.yaml)
+
+          if [[ "$FILE_EXT" == '".pdf"' ]]; then
+            mogrify -format png outputs/figures/three_small_plots.pdf
+            mogrify -format png outputs/figures/two_std_dev_plots.pdf
+            echo "FILE_EXT=.png" >> $GITHUB_OUTPUT
+          else
+            echo "FILE_EXT=$FILE_EXT" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create report
         env:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          pip install -r requirements.txt
-          dvc repro
+          echo "# Parameters" > report.md
+          dvc metrics show --md >> report.md
 
-          git fetch --prune
+          echo "# Main Plot" >> report.md
+          echo "![Main Plot failed to display](./outputs/figures/three_small_plots${{ steps.get_ext.outputs.FILE_EXT }} \"Main plot\")" >> report.md
 
-          dvc metrics show --md > report.md
-          echo "![](./three_small_plots.pdf "Main plot")" >> report.md
-          echo "![](./two_std_dev_plots.pdf "Std. plot")" >> report.md
+          echo "# Standard Deviation Plot" >> report.md
+          echo "![Standard Deviation Plot failed to display](./outputs/figures/two_std_dev_plots${{ steps.get_ext.outputs.FILE_EXT }} \"Std. plot\")" >> report.md
+
           cml comment create report.md
