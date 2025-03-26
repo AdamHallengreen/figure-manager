@@ -5,8 +5,8 @@ stages:
     deps:
     - path: data/Males.csv
       hash: md5
-      md5: 1e89aefc945582fa01d8e352090cc826
-      size: 426268
+      md5: 919467ad1339d44eada89b56b16a5563
+      size: 421907
     params:
       params.yaml:
         data_etl.external_data_path: data/
@@ -18,29 +18,29 @@ stages:
     outs:
     - path: outputs/figures/three_small_plots.pdf
       hash: md5
-      md5: 5853743109d6691f1de1da04fca91046
-      size: 24348
+      md5: 3d2eab12ad12197aeb3e8ed0840bd1d6
+      size: 24361
     - path: outputs/figures/three_small_plots_subplot_1.pdf
       hash: md5
-      md5: 0d9c159b94f0372adc8381967c0bda14
-      size: 22625
+      md5: 3b4ddea062d076ca6843c9a2fd499bb6
+      size: 22618
     - path: outputs/figures/three_small_plots_subplot_2.pdf
       hash: md5
-      md5: 6f5ea450130736096201e1a97d91a95b
-      size: 23076
+      md5: f7f286f031af689aba4081b6733cd07c
+      size: 23103
     - path: outputs/figures/three_small_plots_subplot_3.pdf
       hash: md5
-      md5: 694fbf6be6d84f7eaa1e92c29fd953ba
-      size: 21430
+      md5: 8f28754dadebfb87980aba9f831caf00
+      size: 21403
     - path: outputs/figures/two_std_dev_plots.pdf
       hash: md5
-      md5: 1e81923dd94019cc17b003940ca06a01
-      size: 17732
+      md5: ffccb03d0533d32ede05395e1adac59c
+      size: 17774
     - path: outputs/figures/two_std_dev_plots_subplot_1.pdf
       hash: md5
-      md5: a3b9dbce63b7e6e2ee13577a4f42282f
-      size: 17205
+      md5: 21f8b9fbb9e83266058e707e716cd9fa
+      size: 17240
     - path: outputs/figures/two_std_dev_plots_subplot_2.pdf
       hash: md5
-      md5: 4eb95b271d77f6ac1451b0b2a1d4838e
-      size: 16257
+      md5: 57563500e8f4054a0abc4b7536a3037e
+      size: 16289

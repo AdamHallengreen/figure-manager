@@ -13,7 +13,9 @@ dependencies = [
     "numpy>=2.2.4",
     "pandas>=2.2.3",
     "polars>=1.26.0",
+    "polars-lts-cpu>=1.26.0 ; sys_platform == 'darwin'",
     "seaborn>=0.13.2",
+
 ]
 
 [project.scripts]
@@ -24,7 +26,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
-jupyter = [
+dev = [
     "ipykernel>=6.29.5",
+    "jupyterlab>=4.3.6",
+    "notebook>=7.3.3",
     "pip>=25.0.1",
 ]
