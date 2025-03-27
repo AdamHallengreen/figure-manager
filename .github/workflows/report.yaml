@@ -48,7 +48,7 @@ jobs:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "# Parameters" > report.md
-          dvc metrics show --md >> report.md
+          uv run dvc metrics show --md >> report.md
 
           echo "# Main Plot" >> report.md
           echo "![Main Plot failed to display](./outputs/figures/three_small_plots${{ steps.get_ext.outputs.FILE_EXT }} \"Main plot\")" >> report.md
