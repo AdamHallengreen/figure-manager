@@ -3,12 +3,14 @@ import numpy as np
 import polars as pl
 from typing import Dict, List, Tuple, Union
 
+
 def _print_verbose(message: str, warning: bool = False) -> None:
     """Prints a verbose message with optional warning."""
     if warning:
         print(f"WARNING: {message}")
     else:
         print(message)
+
 
 def _get_min_count_info(data: pl.DataFrame, x_col: str, bins: int = None) -> tuple:
     """Calculates min count and position for verbose output."""
@@ -19,20 +21,31 @@ def _get_min_count_info(data: pl.DataFrame, x_col: str, bins: int = None) -> tup
     else:
         grouped_counts = data.group_by(x_col).agg(pl.count())
         min_count = grouped_counts["count"].min()
-        min_position = grouped_counts.filter(pl.col("count") == min_count).select(x_col).to_series().to_list()
+        min_position = (
+            grouped_counts.filter(pl.col("count") == min_count)
+            .select(x_col)
+            .to_series()
+            .to_list()
+        )
     return min_count, min_position
 
-def _setup_plot_axes(ax: plt.Axes, x_col: str, y_col: str, plot_type: str, ax_settings: dict) -> None:
+
+def _setup_plot_axes(
+    ax: plt.Axes, x_col: str, y_col: str, plot_type: str, ax_settings: dict
+) -> None:
     """Sets up plot axes with labels, title, and limits."""
     ax.set_xlabel(ax_settings.get("xlabel", x_col).capitalize())
     if y_col:
         ax.set_ylabel(ax_settings.get("ylabel", y_col).capitalize())
-        ax.set_title(ax_settings.get("title", f"{plot_type.capitalize()} of {y_col} by {x_col}"))
+        ax.set_title(
+            ax_settings.get("title", f"{plot_type.capitalize()} of {y_col} by {x_col}")
+        )
     else:
         ax.set_title(ax_settings.get("title", f"{plot_type.capitalize()} of {x_col}"))
 
     ax.set_xlim(ax_settings.get("xlim")) if "xlim" in ax_settings else None
     ax.set_ylim(ax_settings.get("ylim")) if "ylim" in ax_settings else None
+
 
 def _sort_groups(
     data: pl.DataFrame,
@@ -52,7 +65,10 @@ def _sort_groups(
         A dictionary where keys are group names (tuples) and values are DataFrames.
     """
 
-    grouped_data = {group_name: group_data for group_name, group_data in data.group_by(group_by_cols)}
+    grouped_data = {
+        group_name: group_data
+        for group_name, group_data in data.group_by(group_by_cols)
+    }
 
     if sort_order:
         # Normalize sort_order to a list of tuples
@@ -80,7 +96,10 @@ def _sort_groups(
         return sorted_groups
 
     else:
-        def sort_key(item: Tuple[Tuple, pl.DataFrame]) -> Tuple[int, Union[Tuple, str, int, None]]:
+
+        def sort_key(
+            item: Tuple[Tuple, pl.DataFrame],
+        ) -> Tuple[int, Union[Tuple, str, int, None]]:
             group_name = item[0]
             if group_name == (None,):
                 return (2, None)
@@ -91,38 +110,46 @@ def _sort_groups(
 
         return dict(sorted(grouped_data.items(), key=sort_key))
 
+
 def _prepare_plot_data(
-        data: Union[pl.DataFrame, pl.Series],
-        x_col: str = None,
-        y_col: str = None,
-        group_by_cols: list = None,
-        sort_order: list = None,
-        agg_fct=None,
-        bins: int = None,
-        label=None,
-        verbose: bool = False,
-    ) -> Tuple[Dict[Tuple, pl.DataFrame], Dict[Tuple, pl.DataFrame]]:
-        """Prepares and sorts data for plotting."""
-        if isinstance(data, pl.DataFrame):
-            group_by_cols = [group_by_cols] if isinstance(group_by_cols, str) else group_by_cols
+    data: Union[pl.DataFrame, pl.Series],
+    x_col: str = None,
+    y_col: str = None,
+    group_by_cols: list = None,
+    sort_order: list = None,
+    agg_fct=None,
+    bins: int = None,
+    label=None,
+    verbose: bool = False,
+) -> Tuple[Dict[Tuple, pl.DataFrame], Dict[Tuple, pl.DataFrame]]:
+    """Prepares and sorts data for plotting."""
+    if isinstance(data, pl.DataFrame):
+        group_by_cols = (
+            [group_by_cols] if isinstance(group_by_cols, str) else group_by_cols
+        )
 
-            if not group_by_cols:
-                pre_agg_data = {(label,): data}
-            else:
-                pre_agg_data = _sort_groups(data, group_by_cols, sort_order=sort_order)
-
-            if agg_fct and y_col:
-                over_columns = [x_col] + (group_by_cols or [])
-                data = data.group_by(over_columns).agg(agg_fct(y_col).alias(y_col)).sort(over_columns)
-
-            if not group_by_cols:
-                sorted_groups = {(label,): data}
-            else:
-                sorted_groups = _sort_groups(data, group_by_cols, sort_order=sort_order)
-
-            return pre_agg_data, sorted_groups
+        if not group_by_cols:
+            pre_agg_data = {(label,): data}
         else:
-            return {}, {(label,): data}
+            pre_agg_data = _sort_groups(data, group_by_cols, sort_order=sort_order)
+
+        if agg_fct and y_col:
+            over_columns = [x_col] + (group_by_cols or [])
+            data = (
+                data.group_by(over_columns)
+                .agg(agg_fct(y_col).alias(y_col))
+                .sort(over_columns)
+            )
+
+        if not group_by_cols:
+            sorted_groups = {(label,): data}
+        else:
+            sorted_groups = _sort_groups(data, group_by_cols, sort_order=sort_order)
+
+        return pre_agg_data, sorted_groups
+    else:
+        return {}, {(label,): data}
+
 
 def generate_plot(
     data: pl.DataFrame,
@@ -156,8 +183,8 @@ def generate_plot(
         verbose (bool, optional): If True, prints detailed information about the plotting process. Defaults to False.
         bins (int, optional): The number of bins to use for histograms. Defaults to 10.
         sort_order (list, optional): A list specifying the order of groups for plotting.
-        y_err (str or list/tuple, optional): Column name(s) for error bars or confidence intervals. 
-            If a string, it specifies the column for symmetric error bars. 
+        y_err (str or list/tuple, optional): Column name(s) for error bars or confidence intervals.
+            If a string, it specifies the column for symmetric error bars.
             If a tuple/list, it should contain two column names for lower and upper bounds of confidence intervals.
         **ax_settings: Additional keyword arguments for customizing the Axes (e.g., axis labels, limits).
 
@@ -210,7 +237,9 @@ def generate_plot(
             raise ValueError("y_err must be a valid column name if provided.")
     elif isinstance(y_err, (tuple, list)):
         if not all(isinstance(col, str) and col in data.columns for col in y_err):
-            raise ValueError("All entries in y_err must be valid column names if provided.")
+            raise ValueError(
+                "All entries in y_err must be valid column names if provided."
+            )
 
     ax = ax or plt.subplots()[1]
     plot_settings = plot_settings or {}
@@ -222,12 +251,18 @@ def generate_plot(
     for group_name, group_data in sorted_groups.items():
         x_values = group_data[x].to_numpy()
         y_values = group_data[y].to_numpy() if y else None
-        group_label = ", ".join(map(str, group_name)) if isinstance(group_name, tuple) else str(group_name)
+        group_label = (
+            ", ".join(map(str, group_name))
+            if isinstance(group_name, tuple)
+            else str(group_name)
+        )
 
         if plot_type == "hist":
             ax.hist(x_values, bins=bins, label=group_label, **plot_settings)
             if verbose:
-                min_count, min_position = _get_min_count_info(pre_agg_data[group_name], x, bins)
+                min_count, min_position = _get_min_count_info(
+                    pre_agg_data[group_name], x, bins
+                )
                 _print_verbose(
                     f"  Group ({group_label}) uses {len(pre_agg_data[group_name])} observations with fewest ({min_count}) at '{x}'={min_position}.",
                     min_count <= 5,
@@ -239,21 +274,35 @@ def generate_plot(
                     if isinstance(y_err, str):
                         y_err_values = group_data[y_err].to_numpy()
                         plot_settings.setdefault("capsize", 3)
-                        ax.errorbar(x_values, y_values, yerr=y_err_values, label=group_label, **plot_settings)
+                        ax.errorbar(
+                            x_values,
+                            y_values,
+                            yerr=y_err_values,
+                            label=group_label,
+                            **plot_settings,
+                        )
                     elif isinstance(y_err, (tuple, list)):
-                        y_ci_low  = group_data[y_err[0]].to_numpy()
+                        y_ci_low = group_data[y_err[0]].to_numpy()
                         y_ci_high = group_data[y_err[1]].to_numpy()
-                        plot_func(x_values, y_values, label=group_label, **plot_settings)
-                        ax.fill_between(x_values, y_ci_low, y_ci_high, alpha=0.3, **plot_settings)
+                        plot_func(
+                            x_values, y_values, label=group_label, **plot_settings
+                        )
+                        ax.fill_between(
+                            x_values, y_ci_low, y_ci_high, alpha=0.3, **plot_settings
+                        )
                     else:
-                        raise TypeError("y_err must be a string, a tuple of strings, or a Polars Series.")
+                        raise TypeError(
+                            "y_err must be a string, a tuple of strings, or a Polars Series."
+                        )
                 else:
                     plot_func(x_values, y_values, label=group_label, **plot_settings)
             else:
                 plot_func(x_values, label=group_label, **plot_settings)
 
             if verbose:
-                min_count, min_position = _get_min_count_info(pre_agg_data[group_name], x)
+                min_count, min_position = _get_min_count_info(
+                    pre_agg_data[group_name], x
+                )
                 _print_verbose(
                     f"  Group ({group_label}) uses {len(pre_agg_data[group_name])} observations with fewest ({min_count}) at '{x}'={min_position}.",
                     min_count <= 5,
