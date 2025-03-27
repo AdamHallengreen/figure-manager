@@ -16,6 +16,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libkrb5-dev yq imagemagick
 
+      - name: Conditionally update file extension in params.yaml
+        run: |
+          # Use yq to modify params.yaml in-place (-i)
+          # This command selects the .figure_manager.file_ext field,
+          # checks if its value is exactly ".pdf", and if true, assigns ".png" to it.
+          # If the value is not ".pdf", it does nothing to that field.
+          # NOTE: This assumes a 'yq' compatible with the 'eval' command and this syntax (like mikefarah/yq v4+).
+          # The version installed via apt might vary. If this fails, alternative methods exist (see below).
+          yq eval '(.figure_manager.file_ext | select(. == ".pdf")) = ".png"' -i params.yaml
+
+          echo "--- params.yaml after potential modification ---"
+          cat params.yaml
+          echo "---------------------------------------------"
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
