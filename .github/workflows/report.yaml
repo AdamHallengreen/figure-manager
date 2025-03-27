@@ -14,7 +14,9 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libkrb5-dev yq imagemagick
+          sudo apt-get install -y libkrb5-dev imagemagick
+          wget https://github.com/mikefarah/yq/releases/download/v4.13.4/yq_linux_amd64 -O /usr/bin/yq 
+          chmod +x /usr/bin/yq
 
       - name: Conditionally update file extension in params.yaml
         run: |
