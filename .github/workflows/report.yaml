@@ -36,9 +36,9 @@ jobs:
           FILE_EXT=$(yq '.figure_manager.file_ext' params.yaml)
 
           if [[ "$FILE_EXT" == '".pdf"' ]]; then
-            mogrify -format png outputs/figures/three_small_plots.pdf
-            mogrify -format png outputs/figures/two_std_dev_plots.pdf
-            echo "FILE_EXT=.png" >> $GITHUB_OUTPUT
+            mogrify -format jpg outputs/figures/three_small_plots.pdf
+            mogrify -format jpg outputs/figures/two_std_dev_plots.pdf
+            echo "FILE_EXT=.jpg" >> $GITHUB_OUTPUT
           else
             echo "FILE_EXT=$FILE_EXT" >> $GITHUB_OUTPUT
           fi
