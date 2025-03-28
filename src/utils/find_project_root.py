@@ -1,8 +1,7 @@
 from pathlib import Path
-from typing import Optional
 
 
-def find_project_root() -> Optional[Path]:
+def find_project_root() -> Path | None:
     current = Path(".").resolve()
 
     while True:

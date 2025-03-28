@@ -1,11 +1,10 @@
 import argparse
-import polars as pl
-from polars import col as c
 import json
+import polars as pl
 import yaml
+from polars import col as c
 
-from figure_manager import FigureManager
-from figure_manager import generate_plot
+from figure_manager import FigureManager, generate_plot
 from utils.find_project_root import find_project_root
 
 

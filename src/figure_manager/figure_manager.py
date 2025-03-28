@@ -1,8 +1,9 @@
+import os
+
 import matplotlib.pyplot as plt
 import seaborn as sns
-import os
-from matplotlib import transforms
 from cycler import cycler
+from matplotlib import transforms
 
 
 class FigureManager:

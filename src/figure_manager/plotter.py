@@ -1,7 +1,7 @@
+
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
-from typing import Dict, List, Tuple, Union
 
 
 def _print_verbose(message: str, warning: bool = False) -> None:
@@ -49,9 +49,9 @@ def _setup_plot_axes(
 
 def _sort_groups(
     data: pl.DataFrame,
-    group_by_cols: List[str] = None,
-    sort_order: List[Union[Tuple, str, int]] = None,
-) -> Dict[Tuple, pl.DataFrame]:
+    group_by_cols: list[str] = None,
+    sort_order: list[tuple | str | int] = None,
+) -> dict[tuple, pl.DataFrame]:
     """
     Sorts groups in a DataFrame based on a custom or default order, placing None groups last.
 
@@ -72,12 +72,12 @@ def _sort_groups(
 
     if sort_order:
         # Normalize sort_order to a list of tuples
-        normalized_sort_order: List[Tuple] = [
+        normalized_sort_order: list[tuple] = [
             (item,) if not isinstance(item, tuple) else item for item in sort_order
         ]
 
-        sorted_groups: Dict[Tuple, pl.DataFrame] = {}
-        remaining_groups: Dict[Tuple, pl.DataFrame] = {}
+        sorted_groups: dict[tuple, pl.DataFrame] = {}
+        remaining_groups: dict[tuple, pl.DataFrame] = {}
 
         for group_name in normalized_sort_order:
             if group_name in grouped_data:
@@ -98,8 +98,8 @@ def _sort_groups(
     else:
 
         def sort_key(
-            item: Tuple[Tuple, pl.DataFrame],
-        ) -> Tuple[int, Union[Tuple, str, int, None]]:
+            item: tuple[tuple, pl.DataFrame],
+        ) -> tuple[int, tuple | str | int | None]:
             group_name = item[0]
             if group_name == (None,):
                 return (2, None)
@@ -112,7 +112,7 @@ def _sort_groups(
 
 
 def _prepare_plot_data(
-    data: Union[pl.DataFrame, pl.Series],
+    data: pl.DataFrame | pl.Series,
     x_col: str = None,
     y_col: str = None,
     group_by_cols: list = None,
@@ -121,7 +121,7 @@ def _prepare_plot_data(
     bins: int = None,
     label=None,
     verbose: bool = False,
-) -> Tuple[Dict[Tuple, pl.DataFrame], Dict[Tuple, pl.DataFrame]]:
+) -> tuple[dict[tuple, pl.DataFrame], dict[tuple, pl.DataFrame]]:
     """Prepares and sorts data for plotting."""
     if isinstance(data, pl.DataFrame):
         group_by_cols = (
@@ -235,7 +235,7 @@ def generate_plot(
     if isinstance(y_err, str):
         if y_err not in data.columns:
             raise ValueError("y_err must be a valid column name if provided.")
-    elif isinstance(y_err, (tuple, list)):
+    elif isinstance(y_err, tuple | list):
         if not all(isinstance(col, str) and col in data.columns for col in y_err):
             raise ValueError(
                 "All entries in y_err must be valid column names if provided."
@@ -281,7 +281,7 @@ def generate_plot(
                             label=group_label,
                             **plot_settings,
                         )
-                    elif isinstance(y_err, (tuple, list)):
+                    elif isinstance(y_err, tuple | list):
                         y_ci_low = group_data[y_err[0]].to_numpy()
                         y_ci_high = group_data[y_err[1]].to_numpy()
                         plot_func(
