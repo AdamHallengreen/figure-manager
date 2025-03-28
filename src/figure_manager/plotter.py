@@ -1,4 +1,3 @@
-
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
@@ -53,7 +52,8 @@ def _sort_groups(
     sort_order: list[tuple | str | int] = None,
 ) -> dict[tuple, pl.DataFrame]:
     """
-    Sorts groups in a DataFrame based on a custom or default order, placing None groups last.
+    Sorts groups in a DataFrame based on a custom or default order,
+    placing None groups last.
 
     Args:
         data: The Polars DataFrame to group and sort.
@@ -168,38 +168,64 @@ def generate_plot(
     **ax_settings,
 ) -> plt.Axes:
     """
-    Generates a plot from a Polars DataFrame with optional error bars or confidence intervals.
+    Generates a plot from a Polars DataFrame with optional error bars
+    or confidence intervals.
 
     Parameters:
-        data (pl.DataFrame): The input data as a Polars DataFrame.
-        x (str): The column name to use for the x-axis.
-        y (str, optional): The column name to use for the y-axis. Required for most plot types except histograms.
-        plot_type (str, optional): The type of plot to generate (e.g., "plot", "scatter", "bar", "hist"). Defaults to "plot".
-        group_by (list, optional): A list of column names to group the data by before plotting.
-        agg_fct (callable, optional): An aggregation function to apply to grouped data.
-        ax (plt.Axes, optional): A Matplotlib Axes object to plot on. If not provided, a new Axes will be created.
-        label (str, optional): A label for the plot. Used in the legend if provided.
-        plot_settings (dict, optional): Additional keyword arguments to customize the plot (e.g., color, linestyle).
-        verbose (bool, optional): If True, prints detailed information about the plotting process. Defaults to False.
-        bins (int, optional): The number of bins to use for histograms. Defaults to 10.
-        sort_order (list, optional): A list specifying the order of groups for plotting.
-        y_err (str or list/tuple, optional): Column name(s) for error bars or confidence intervals.
+        data (pl.DataFrame):
+            The input data as a Polars DataFrame.
+        x (str):
+            The column name to use for the x-axis.
+        y (str, optional):
+            The column name to use for the y-axis.
+            Required for most plot types except histograms.
+        plot_type (str, optional):
+            The type of plot to generate (e.g., "plot", "scatter", "bar", "hist").
+            Defaults to "plot".
+        group_by (list, optional):
+            A list of column names to group the data by before plotting.
+        agg_fct (callable, optional):
+            An aggregation function to apply to grouped data.
+        ax (plt.Axes, optional):
+            A Matplotlib Axes object to plot on. If not provided,
+            a new Axes will be created.
+        label (str, optional):
+            A label for the plot. Used in the legend if provided.
+        plot_settings (dict, optional):
+            Additional keyword arguments to customize the plot (e.g., color, linestyle).
+        verbose (bool, optional):
+            If True, prints detailed information about the plotting process.
+            Defaults to False.
+        bins (int, optional):
+            The number of bins to use for histograms. Defaults to 10.
+        sort_order (list, optional):
+            A list specifying the order of groups for plotting.
+        y_err (str or list/tuple, optional):
+            Column name(s) for error bars or confidence intervals.
             If a string, it specifies the column for symmetric error bars.
-            If a tuple/list, it should contain two column names for lower and upper bounds of confidence intervals.
-        **ax_settings: Additional keyword arguments for customizing the Axes (e.g., axis labels, limits).
+            If a tuple/list, it should contain two column names for
+            lower and upper bounds of confidence intervals.
+        **ax_settings:
+            Additional keyword arguments for customizing the Axes
+            (e.g., axis labels, limits).
 
     Returns:
         plt.Axes: The Matplotlib Axes object containing the plot.
 
     Raises:
-        TypeError: If `data` is not a Polars DataFrame, or if `y_err` is not a valid type.
-        ValueError: If `x`, `y`, or `y_err` are not valid column names in the DataFrame.
+        TypeError:
+            If `data` is not a Polars DataFrame, or if `y_err` is not a valid type.
+        ValueError:
+            If `x`, `y`, or `y_err` are not valid column names in the DataFrame.
 
     Notes:
-        - If `group_by` is provided, the data will be grouped, and a separate plot will be created for each group.
+        - If `group_by` is provided, the data will be grouped, and a separate plot
+            will be created for each group.
         - For histograms, only `x` is required, and `y` is ignored.
-        - If `y_err` is provided, error bars or confidence intervals will be added to the plot.
-        - The function supports verbose mode to provide detailed insights into the data and plotting process.
+        - If `y_err` is provided, error bars or confidence intervals will be added to
+            the plot.
+        - The function supports verbose mode to provide detailed insights into the data
+            and plotting process.
 
     Example:
         ```python
@@ -235,11 +261,10 @@ def generate_plot(
     if isinstance(y_err, str):
         if y_err not in data.columns:
             raise ValueError("y_err must be a valid column name if provided.")
-    elif isinstance(y_err, tuple | list):
-        if not all(isinstance(col, str) and col in data.columns for col in y_err):
-            raise ValueError(
-                "All entries in y_err must be valid column names if provided."
-            )
+    elif (isinstance(y_err, tuple | list)) and (
+        not all(isinstance(col, str) and col in data.columns for col in y_err)
+    ):
+        raise ValueError("All entries in y_err must be valid column names if provided.")
 
     ax = ax or plt.subplots()[1]
     plot_settings = plot_settings or {}
@@ -263,8 +288,14 @@ def generate_plot(
                 min_count, min_position = _get_min_count_info(
                     pre_agg_data[group_name], x, bins
                 )
+                message = (
+                    f"  Group ({group_label}) uses "
+                    f"{len(pre_agg_data[group_name])} "
+                    f"observations with fewest ({min_count}) "
+                    f"at '{x}'={min_position}."
+                )
                 _print_verbose(
-                    f"  Group ({group_label}) uses {len(pre_agg_data[group_name])} observations with fewest ({min_count}) at '{x}'={min_position}.",
+                    message,
                     min_count <= 5,
                 )
         else:
@@ -291,9 +322,11 @@ def generate_plot(
                             x_values, y_ci_low, y_ci_high, alpha=0.3, **plot_settings
                         )
                     else:
-                        raise TypeError(
-                            "y_err must be a string, a tuple of strings, or a Polars Series."
+                        message = (
+                            "y_err must be a string, a tuple of strings, "
+                            "or a Polars Series."
                         )
+                        raise TypeError(message)
                 else:
                     plot_func(x_values, y_values, label=group_label, **plot_settings)
             else:
@@ -303,8 +336,14 @@ def generate_plot(
                 min_count, min_position = _get_min_count_info(
                     pre_agg_data[group_name], x
                 )
+                message = (
+                    f"  Group ({group_label}) uses "
+                    f"{len(pre_agg_data[group_name])} "
+                    f"observations with fewest ({min_count}) "
+                    f"at '{x}'={min_position}.",
+                )
                 _print_verbose(
-                    f"  Group ({group_label}) uses {len(pre_agg_data[group_name])} observations with fewest ({min_count}) at '{x}'={min_position}.",
+                    message,
                     min_count <= 5,
                 )
 
