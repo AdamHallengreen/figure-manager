@@ -159,7 +159,7 @@ if __name__ == "__main__":
     with open(args.params) as param_file:
         params = yaml.safe_load(param_file)
 
-    PROJECT_ROOT = find_project_root()
+    PROJECT_ROOT = find_project_root(__file__)
     EXTERNAL_DATA_PATH: str = params["data_etl"]["external_data_path"]
     FIGURES_DIR: str = params["figure_manager"]["figures_dir"]
     PAPER_SIZE: str = params["figure_manager"]["paper_size"]
