@@ -1,0 +1,55 @@
+[project]
+name = "figure-manager"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Adam Hallengreen", email = "90259162+AdamHallengreen@users.noreply.github.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "dvc>=3.59.1",
+    "matplotlib>=3.10.1",
+    "numpy>=2.2.4",
+    "pandas>=2.2.3",
+    "polars>=1.26.0",
+    "polars-lts-cpu>=1.26.0 ; sys_platform == 'darwin'",
+    "seaborn>=0.13.2",
+
+]
+
+[project.scripts]
+figure-manager = "figure_manager:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=6.29.5",
+    "jupyterlab>=4.3.6",
+    "notebook>=7.3.3",
+    "pip>=25.0.1",
+    "ruff>=0.11.2",
+]
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
+
+[tool.ruff]
+# Also check for fixes that are unsafe to apply automatically.
+unsafe-fixes = true
