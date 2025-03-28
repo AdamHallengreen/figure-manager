@@ -22,9 +22,6 @@ class FigureManager:
         self.dpi = dpi
         self.use_latex = use_latex
 
-        # Ensure output directory exists
-        os.makedirs(self.output_dir, exist_ok=True)
-
         # Enable LaTeX rendering for text
         if use_latex:
             plt.rc("text", usetex=True)

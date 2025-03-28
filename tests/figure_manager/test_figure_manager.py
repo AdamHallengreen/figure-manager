@@ -1,4 +1,3 @@
-import os
 
 import pytest
 from matplotlib.figure import Figure
@@ -19,7 +18,6 @@ def test_initialization(figure_manager):
     assert figure_manager.file_ext == ".pdf"
     assert figure_manager.dpi == 300
     assert not figure_manager.use_latex
-    assert os.path.exists("test_figures")
 
 
 def test_create_figure(figure_manager):
@@ -32,12 +30,16 @@ def test_create_figure(figure_manager):
     assert figure_manager.n_subplots == 3
 
 
-def test_save_figure(figure_manager):
+def test_save_figure(figure_manager, monkeypatch, tmp_path):
     """Test saving a figure."""
+    # Use tmp_path for the output directory
+    monkeypatch.setattr(figure_manager, "output_dir", tmp_path)
+
     figure_manager.create_figure(1, 1, 1)
     figure_manager.save_figure("test_figure")
-    assert os.path.exists("test_figures/test_figure.pdf")
-    assert os.path.exists("test_figures/test_figure_subplot_1.pdf")
+
+    assert (tmp_path / "test_figure.pdf").exists()
+    assert (tmp_path / "test_figure_subplot_1.pdf").exists()
 
 
 def test_invalid_create_figure(figure_manager):
