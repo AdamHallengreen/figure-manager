@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -9,21 +9,18 @@ from matplotlib import transforms
 class FigureManager:
     def __init__(
         self,
-        output_dir="figures/",
+        output_dir=Path("figures/"),
         paper_size="A4",
         file_ext=".pdf",
         dpi=300,
         use_latex=True,
     ):
         """Initialize figure manager with output and style parameters."""
-        self.output_dir = output_dir
+        self.output_dir = Path(output_dir)
         self.paper_size = paper_size.lower()
         self.file_ext = file_ext
         self.dpi = dpi
         self.use_latex = use_latex
-
-        # Ensure output directory exists
-        os.makedirs(self.output_dir, exist_ok=True)
 
         # Enable LaTeX rendering for text
         if use_latex:
@@ -200,10 +197,10 @@ class FigureManager:
             raise RuntimeError("Call create_figure before saving the figure.")
 
         # Apply tight layout before saving
-        self.fig.tight_layout()  # Add tight_layout here!
+        self.fig.tight_layout()
 
         # Save the full figure
-        full_path = os.path.join(self.output_dir, f"{filename}{self.file_ext}")
+        full_path = self.output_dir / f"{filename}{self.file_ext}"
         try:
             self.fig.savefig(
                 full_path,
@@ -218,7 +215,7 @@ class FigureManager:
 
         # Save each subplot separately
         for i, ax in enumerate(self.axes):
-            subplot_path = os.path.join(
-                self.output_dir, f"{filename}_subplot_{i + 1}{self.file_ext}"
+            subplot_path = (
+                self.output_dir / f"{filename}_subplot_{i + 1}{self.file_ext}"
             )
             self._save_subplot(ax, subplot_path)

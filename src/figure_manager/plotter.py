@@ -18,10 +18,10 @@ def _get_min_count_info(data: pl.DataFrame, x_col: str, bins: int = None) -> tup
         min_count = counts.min()
         min_position = bin_edges[np.argmin(counts)]
     else:
-        grouped_counts = data.group_by(x_col).agg(pl.count())
-        min_count = grouped_counts["count"].min()
+        grouped_counts = data.group_by(x_col).agg(pl.len())
+        min_count = grouped_counts["len"].min()
         min_position = (
-            grouped_counts.filter(pl.col("count") == min_count)
+            grouped_counts.filter(pl.col("len") == min_count)
             .select(x_col)
             .to_series()
             .to_list()

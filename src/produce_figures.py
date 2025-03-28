@@ -1,5 +1,6 @@
 import argparse
 import json
+from pathlib import Path
 
 import polars as pl
 import yaml
@@ -159,9 +160,9 @@ if __name__ == "__main__":
     with open(args.params) as param_file:
         params = yaml.safe_load(param_file)
 
-    PROJECT_ROOT = find_project_root()
-    EXTERNAL_DATA_PATH: str = params["data_etl"]["external_data_path"]
-    FIGURES_DIR: str = params["figure_manager"]["figures_dir"]
+    PROJECT_ROOT = find_project_root(__file__)
+    EXTERNAL_DATA_PATH = Path(params["data_etl"]["external_data_path"])
+    FIGURES_DIR = Path(params["figure_manager"]["figures_dir"])
     PAPER_SIZE: str = params["figure_manager"]["paper_size"]
     FILE_EXT: str = params["figure_manager"]["file_ext"]
     USE_LATEX: bool = params["figure_manager"]["use_latex"]
@@ -174,7 +175,7 @@ if __name__ == "__main__":
         for k, v in params["plotter"].items()
         if k in ["verbose", "figures_dir", "paper_size", "file_ext"]
     }
-    metrics["external_data_path"] = EXTERNAL_DATA_PATH
+    metrics["external_data_path"] = str(EXTERNAL_DATA_PATH)
     metrics["use_latex"] = USE_LATEX
     with open(PROJECT_ROOT / "metrics.json", "w") as metrics_file:
         json.dump(metrics, metrics_file, indent=4)
