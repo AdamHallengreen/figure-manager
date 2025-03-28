@@ -1,4 +1,4 @@
-name: Report
+name: Checks
 on: [push]
 jobs:
   lint:
