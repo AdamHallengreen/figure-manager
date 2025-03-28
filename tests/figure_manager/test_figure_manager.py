@@ -1,4 +1,3 @@
-
 import pytest
 from matplotlib.figure import Figure
 
@@ -6,14 +5,14 @@ from figure_manager.figure_manager import FigureManager
 
 
 @pytest.fixture
-def figure_manager():
+def figure_manager(tmp_path):
     """Fixture to create a FigureManager instance."""
-    return FigureManager(output_dir="test_figures", paper_size="A4", use_latex=False)
+    return FigureManager(output_dir=tmp_path, paper_size="A4", use_latex=False)
 
 
-def test_initialization(figure_manager):
+def test_initialization(figure_manager, tmp_path):
     """Test initialization of FigureManager."""
-    assert figure_manager.output_dir == "test_figures"
+    assert figure_manager.output_dir == tmp_path
     assert figure_manager.paper_size == "a4"
     assert figure_manager.file_ext == ".pdf"
     assert figure_manager.dpi == 300
@@ -30,11 +29,8 @@ def test_create_figure(figure_manager):
     assert figure_manager.n_subplots == 3
 
 
-def test_save_figure(figure_manager, monkeypatch, tmp_path):
+def test_save_figure(figure_manager, tmp_path):
     """Test saving a figure."""
-    # Use tmp_path for the output directory
-    monkeypatch.setattr(figure_manager, "output_dir", tmp_path)
-
     figure_manager.create_figure(1, 1, 1)
     figure_manager.save_figure("test_figure")
 
