@@ -5,42 +5,42 @@ stages:
     deps:
     - path: data/Males.csv
       hash: md5
-      md5: 919467ad1339d44eada89b56b16a5563
-      size: 421907
+      md5: 1e89aefc945582fa01d8e352090cc826
+      size: 426268
     params:
       params.yaml:
         data_etl.external_data_path: data/
         figure_manager.figures_dir: outputs/figures
-        figure_manager.file_ext: .pdf
+        figure_manager.file_ext: .jpg
         figure_manager.paper_size: A4
         figure_manager.use_latex: false
         plotter.verbose: false
     outs:
-    - path: outputs/figures/three_small_plots.pdf
+    - path: outputs/figures/three_small_plots.jpg
       hash: md5
-      md5: 5bb992410e2bfb61d87af80d6bd439dc
-      size: 24383
-    - path: outputs/figures/three_small_plots_subplot_1.pdf
+      md5: 6dd73404ee1aa6e3afedc082535fca21
+      size: 237739
+    - path: outputs/figures/three_small_plots_subplot_1.jpg
       hash: md5
-      md5: 44d7a022875635cb7ae732cae41288da
-      size: 22630
-    - path: outputs/figures/three_small_plots_subplot_2.pdf
+      md5: 00e4a168f88bb4bc188950ecd60f3729
+      size: 91182
+    - path: outputs/figures/three_small_plots_subplot_2.jpg
       hash: md5
-      md5: fe0ee699b463fb113408386fb75da461
-      size: 23076
-    - path: outputs/figures/three_small_plots_subplot_3.pdf
+      md5: c9986cc26cd6951d83b5b8da8cf06005
+      size: 91230
+    - path: outputs/figures/three_small_plots_subplot_3.jpg
       hash: md5
-      md5: ea4dbf4181627a7b9a50e06ef6b6fa0e
-      size: 21422
-    - path: outputs/figures/two_std_dev_plots.pdf
+      md5: 28151dd1514a8c6b16cd67ea57e5a290
+      size: 45738
+    - path: outputs/figures/two_std_dev_plots.jpg
       hash: md5
-      md5: 85fecd757fc729237e321d47c3babe5f
-      size: 17764
-    - path: outputs/figures/two_std_dev_plots_subplot_1.pdf
+      md5: d64dd97921711bb4210af6e00d689f19
+      size: 143191
+    - path: outputs/figures/two_std_dev_plots_subplot_1.jpg
       hash: md5
-      md5: 16845879655cefac9a8e6c1ce45bbba7
-      size: 17209
-    - path: outputs/figures/two_std_dev_plots_subplot_2.pdf
+      md5: c5df01dd3893eec6169b54d484222d73
+      size: 74379
+    - path: outputs/figures/two_std_dev_plots_subplot_2.jpg
       hash: md5
-      md5: 02e939762d3543fdb0babb075de8329d
-      size: 16250
+      md5: b709600369db82f8ba44d1045f7a798d
+      size: 70855
