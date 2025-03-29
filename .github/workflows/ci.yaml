@@ -5,21 +5,29 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4 # Updated version
+      - uses: actions/checkout@v4
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v1 # Updated version
+        uses: astral-sh/setup-uv@v1
 
-      # Setup Python and cache uv environment
-      - name: "Set up Python and cache dependencies"
+      # Setup Python (without uv-specific cache option)
+      - name: "Set up Python"
         uses: actions/setup-python@v5
         with:
           python-version-file: ".python-version"
-          cache: 'uv' # Enable caching for uv
+          # Removed incorrect cache: 'uv'
 
-      # No need to run 'uv venv' or 'uv sync' explicitly here if cache exists and is hit.
-      # 'uv run' will use the cached environment or create/update it as needed.
+      # Explicitly cache uv's global cache directory
+      - name: Cache uv global directory
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv # Default uv cache location on Linux
+          # Key based on OS, 'uv', and hash of dependency files
+          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml', '**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
 
+      # uv run commands will now use the restored cache if available
       - name: Check formatting with Ruff
         run: uv run ruff format --check .
 
@@ -28,82 +36,91 @@ jobs:
 
   type_check:
     runs-on: ubuntu-latest
-    # No 'needs: lint' - run in parallel
+    # Run in parallel
     steps:
-      - uses: actions/checkout@v4 # Updated version
+      - uses: actions/checkout@v4
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v1 # Updated version
+        uses: astral-sh/setup-uv@v1
 
-      # Setup Python and cache uv environment
-      - name: "Set up Python and cache dependencies"
+      - name: "Set up Python"
         uses: actions/setup-python@v5
         with:
           python-version-file: ".python-version"
-          cache: 'uv' # Enable caching for uv
+
+      - name: Cache uv global directory
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml', '**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
 
       - name: Run pyright
         run: uv run pyright
 
   test:
     runs-on: ubuntu-latest
-    # No 'needs: [lint, type_check]' - run in parallel
+    # Run in parallel
     steps:
-      - uses: actions/checkout@v4 # Updated version
+      - uses: actions/checkout@v4
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v1 # Updated version
+        uses: astral-sh/setup-uv@v1
 
-      # Setup Python and cache uv environment
-      - name: "Set up Python and cache dependencies"
+      - name: "Set up Python"
         uses: actions/setup-python@v5
         with:
           python-version-file: ".python-version"
-          cache: 'uv' # Enable caching for uv
+
+      - name: Cache uv global directory
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml', '**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
 
       - name: Run pytest
         run: uv run pytest
 
   report:
     runs-on: ubuntu-latest
-    # Depends on the SUCCESS of all parallel checks
     needs: [lint, type_check, test]
-    # Optional: Only run report if the triggering branch is the main branch or a PR
-    # if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
     permissions:
-      # Permissions needed for CML to comment on PRs/commits
       contents: read
       pull-requests: write
       issues: write
-      # Keep other permissions if needed by CML features you use
-      # discussions: write
-      # checks: write
-      # statuses: write
     steps:
-      - uses: actions/checkout@v4 # Updated version
+      - uses: actions/checkout@v4
 
-      # System dependencies - less easily cached, accept the time cost
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libkrb5-dev yq imagemagick # Added --no-install-recommends
-          sudo apt-get clean # Clean up apt cache
-          sudo rm -rf /var/lib/apt/lists/* # Clean up apt lists
+          sudo apt-get install -y --no-install-recommends libkrb5-dev yq imagemagick
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v1 # Updated version
+        uses: astral-sh/setup-uv@v1
 
-      # Setup Python and cache uv environment (also needed for DVC/CML potentially)
-      - name: "Set up Python and cache dependencies"
+      - name: "Set up Python"
         uses: actions/setup-python@v5
         with:
           python-version-file: ".python-version"
-          cache: 'uv' # Enable caching for uv
 
-      # Cache DVC downloaded data
-      # Key invalidates if dvc.lock changes, ensuring repro runs when data deps change.
-      - name: Cache DVC
-        uses: actions/cache@v4 # Updated version
+      # Cache uv's global cache here too for 'uv run dvc' etc.
+      - name: Cache uv global directory
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml', '**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      # Cache DVC data (remains the same)
+      - name: Cache DVC data
+        uses: actions/cache@v4
         with:
           path: .dvc/cache
           key: ${{ runner.os }}-dvc-${{ hashFiles('dvc.lock') }}
@@ -111,26 +128,20 @@ jobs:
             ${{ runner.os }}-dvc-
 
       - name: Set up CML
-        uses: iterative/setup-cml@v2 # Updated version
+        uses: iterative/setup-cml@v2
 
-      # Run dvc repro - will use cached data if available and dvc.lock hasn't changed
       - name: Create output
         run: uv run dvc repro
 
-      # The rest of the reporting steps remain largely the same
       - name: Get file extension and convert PDF if needed
         id: get_ext
         run: |
-          # Ensure yq uses the correct file if not in root
           FILE_EXT=$(yq '.figure_manager.file_ext' params.yaml)
-
           if [[ "$FILE_EXT" == '".pdf"' ]]; then
-            # Use || true to prevent failure if files don't exist yet (e.g., first run)
             mogrify -format png outputs/figures/three_small_plots.pdf || true
             mogrify -format png outputs/figures/two_std_dev_plots.pdf || true
             echo "FILE_EXT=.png" >> $GITHUB_OUTPUT
           else
-            # Remove potential quotes from yq output if not PDF
             CLEAN_EXT=$(echo $FILE_EXT | sed 's/"//g')
             echo "FILE_EXT=$CLEAN_EXT" >> $GITHUB_OUTPUT
           fi
@@ -140,16 +151,14 @@ jobs:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "# Parameters" > report.md
-          # Use --md option directly if available and preferred
           uv run dvc metrics show --md >> report.md || echo "Failed to get metrics" >> report.md
 
-          echo "" >> report.md # Add spacing
+          echo "" >> report.md
           echo "## Main Plot" >> report.md
           echo "![Main Plot](./outputs/figures/three_small_plots${{ steps.get_ext.outputs.FILE_EXT }})" >> report.md
 
-          echo "" >> report.md # Add spacing
+          echo "" >> report.md
           echo "## Standard Deviation Plot" >> report.md
           echo "![Standard Deviation Plot](./outputs/figures/two_std_dev_plots${{ steps.get_ext.outputs.FILE_EXT }})" >> report.md
 
-          # Create CML comment
           cml comment create report.md
