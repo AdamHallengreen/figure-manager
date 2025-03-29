@@ -20,7 +20,7 @@ jobs:
       - name: Lint with Ruff
         run: uv run ruff check .
 
-  type check:
+  type_check:
     runs-on: ubuntu-latest
     needs: lint
     steps:
