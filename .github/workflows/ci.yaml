@@ -34,8 +34,11 @@ jobs:
         with:
           python-version-file: ".python-version"
 
+      - name: Add UV venv to PATH
+        run: echo "$(uv env path)/bin" >> $GITHUB_PATH
+
       - name: Run pyright
-        run: uv run pyright
+        uses: jakebailey/pyright-action@v2
 
   test:
     runs-on: ubuntu-latest
