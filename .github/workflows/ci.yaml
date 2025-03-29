@@ -35,7 +35,7 @@ jobs:
           python-version-file: ".python-version"
 
       - name: Run pyright
-        uses: uv run pyright
+        run: uv run pyright
 
   test:
     runs-on: ubuntu-latest
