@@ -1,6 +1,9 @@
+from collections.abc import Callable
+
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
+from matplotlib.axes import Axes
 
 
 def _print_verbose(message: str, warning: bool = False) -> None:
@@ -11,7 +14,9 @@ def _print_verbose(message: str, warning: bool = False) -> None:
         print(message)
 
 
-def _get_min_count_info(data: pl.DataFrame, x_col: str, bins: int = None) -> tuple:
+def _get_min_count_info(
+    data: pl.DataFrame, x_col: str, bins: int | None = None
+) -> tuple:
     """Calculates min count and position for verbose output."""
     if bins is not None:
         counts, bin_edges = np.histogram(data[x_col].to_numpy(), bins=bins)
@@ -30,7 +35,7 @@ def _get_min_count_info(data: pl.DataFrame, x_col: str, bins: int = None) -> tup
 
 
 def _setup_plot_axes(
-    ax: plt.Axes, x_col: str, y_col: str, plot_type: str, ax_settings: dict
+    ax: Axes, x_col: str, y_col: str | None, plot_type: str, ax_settings: dict
 ) -> None:
     """Sets up plot axes with labels, title, and limits."""
     ax.set_xlabel(ax_settings.get("xlabel", x_col).capitalize())
@@ -48,8 +53,8 @@ def _setup_plot_axes(
 
 def _sort_groups(
     data: pl.DataFrame,
-    group_by_cols: list[str] = None,
-    sort_order: list[tuple | str | int] = None,
+    group_by_cols: list[str] | None = None,
+    sort_order: list[tuple | str | int] | None = None,
 ) -> dict[tuple, pl.DataFrame]:
     """
     Sorts groups in a DataFrame based on a custom or default order,
@@ -112,61 +117,61 @@ def _sort_groups(
 
 
 def _prepare_plot_data(
-    data: pl.DataFrame | pl.Series,
-    x_col: str = None,
-    y_col: str = None,
-    group_by_cols: list = None,
-    sort_order: list = None,
-    agg_fct=None,
-    bins: int = None,
-    label=None,
+    data: pl.DataFrame,
+    x_col: str | None = None,
+    y_col: str | None = None,
+    group_by_cols: list[str] | str | None = None,
+    sort_order: list[tuple | str | int] | None = None,
+    agg_fct: Callable | None = None,
+    bins: int | None = None,
+    label: str | None = None,
     verbose: bool = False,
 ) -> tuple[dict[tuple, pl.DataFrame], dict[tuple, pl.DataFrame]]:
     """Prepares and sorts data for plotting."""
-    if isinstance(data, pl.DataFrame):
-        group_by_cols = (
-            [group_by_cols] if isinstance(group_by_cols, str) else group_by_cols
+    if isinstance(group_by_cols, str):
+        group_by_cols = [group_by_cols]
+    elif isinstance(group_by_cols, list):
+        group_by_cols = group_by_cols
+    else:
+        group_by_cols = []
+
+    if not group_by_cols:
+        pre_agg_data = {(label,): data}
+    else:
+        pre_agg_data = _sort_groups(data, group_by_cols, sort_order=sort_order)
+
+    if agg_fct and y_col:
+        over_columns = [x_col] + group_by_cols
+        data = (
+            data.group_by(over_columns)
+            .agg(agg_fct(y_col).alias(y_col))
+            .sort(over_columns)
         )
 
-        if not group_by_cols:
-            pre_agg_data = {(label,): data}
-        else:
-            pre_agg_data = _sort_groups(data, group_by_cols, sort_order=sort_order)
-
-        if agg_fct and y_col:
-            over_columns = [x_col] + (group_by_cols or [])
-            data = (
-                data.group_by(over_columns)
-                .agg(agg_fct(y_col).alias(y_col))
-                .sort(over_columns)
-            )
-
-        if not group_by_cols:
-            sorted_groups = {(label,): data}
-        else:
-            sorted_groups = _sort_groups(data, group_by_cols, sort_order=sort_order)
-
-        return pre_agg_data, sorted_groups
+    if not group_by_cols:
+        sorted_groups = {(label,): data}
     else:
-        return {}, {(label,): data}
+        sorted_groups = _sort_groups(data, group_by_cols, sort_order=sort_order)
+
+    return pre_agg_data, sorted_groups
 
 
 def generate_plot(
     data: pl.DataFrame,
     x: str,
-    y: str = None,
+    y: str | None = None,
     plot_type: str = "plot",
-    group_by: list = None,
-    agg_fct=None,
-    ax: plt.Axes = None,
-    label=None,
-    plot_settings: dict = None,
+    group_by: list[str] | str | None = None,
+    agg_fct: Callable | None = None,
+    ax: Axes | None = None,
+    label: str | None = None,
+    plot_settings: dict | None = None,
     verbose: bool = False,
-    bins: int = 10,
-    sort_order: list = None,
-    y_err: str = None,
-    **ax_settings,
-) -> plt.Axes:
+    bins: int | None = None,
+    sort_order: list[tuple | str | int] | None = None,
+    y_err: str | list[str] | tuple[str, str] | None = None,
+    **ax_settings,  # pyright: ignore[reportMissingParameterType]
+) -> Axes:
     """
     Generates a plot from a Polars DataFrame with optional error bars
     or confidence intervals.
@@ -267,7 +272,12 @@ def generate_plot(
         raise ValueError("All entries in y_err must be valid column names if provided.")
 
     ax = ax or plt.subplots()[1]
+    if ax is None:
+        raise ValueError("ax must be a valid matplotlib Axes instance.")
     plot_settings = plot_settings or {}
+    bins = bins or 10
+    group_by = group_by or []
+    y_err = y_err or ""
 
     pre_agg_data, sorted_groups = _prepare_plot_data(
         data, x, y, group_by, sort_order, agg_fct, bins, label, verbose
@@ -275,7 +285,6 @@ def generate_plot(
 
     for group_name, group_data in sorted_groups.items():
         x_values = group_data[x].to_numpy()
-        y_values = group_data[y].to_numpy() if y else None
         group_label = (
             ", ".join(map(str, group_name))
             if isinstance(group_name, tuple)
@@ -301,9 +310,14 @@ def generate_plot(
         else:
             plot_func = getattr(ax, plot_type)
             if y:
+                y_values = group_data[y].to_numpy()
                 if y_err:
                     if isinstance(y_err, str):
                         y_err_values = group_data[y_err].to_numpy()
+                        if y_err_values is None:
+                            raise ValueError(
+                                f"y_err column '{y_err}' contains None values."
+                            )
                         plot_settings.setdefault("capsize", 3)
                         ax.errorbar(
                             x_values,
@@ -340,12 +354,9 @@ def generate_plot(
                     f"  Group ({group_label}) uses "
                     f"{len(pre_agg_data[group_name])} "
                     f"observations with fewest ({min_count}) "
-                    f"at '{x}'={min_position}.",
+                    f"at '{x}'={min_position}."
                 )
-                _print_verbose(
-                    message,
-                    min_count <= 5,
-                )
+                _print_verbose(message, min_count <= 5)
 
     if group_by or label:
         ax.legend()

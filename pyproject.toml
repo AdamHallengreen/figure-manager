@@ -30,6 +30,7 @@ dev = [
     "jupyterlab>=4.3.6",
     "notebook>=7.3.3",
     "pip>=25.0.1",
+    "pyright>=1.1.398",
     "pytest>=8.3.5",
     "ruff>=0.11.2",
 ]
@@ -53,3 +54,10 @@ select = [
 [tool.ruff]
 # Also check for fixes that are unsafe to apply automatically.
 unsafe-fixes = true
+
+[tool.pyright]
+include = ["src"]
+exclude = ["src/produce_figures.py"]
+typeCheckingMode = "standard"
+reportMissingTypeStubs = true
+reportMissingParameterType = "error"

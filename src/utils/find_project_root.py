@@ -3,7 +3,7 @@ import pathlib
 
 def find_project_root(
     start_path: str | pathlib.Path, markers: list[str] | None = None
-) -> pathlib.Path | None:
+) -> pathlib.Path:
     """
     Finds the project root directory by searching upwards from a starting path
     for specific marker files or directories.
@@ -69,6 +69,8 @@ def find_project_root(
         if parent_dir == current_dir:
             # This happens when current_dir is the root directory (e.g., '/')
             # or if permission errors prevent accessing higher directories.
-            return None  # Root marker not found
+            raise FileNotFoundError(
+                "Project root not found. No markers found in any parent directories."
+            )
 
         current_dir = parent_dir
