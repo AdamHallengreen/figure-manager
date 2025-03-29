@@ -173,7 +173,7 @@ class FigureManager:
         self._apply_custom_style()
 
         fig, axes_array = plt.subplots(n_rows, n_cols, squeeze=False)
-        axes: list[Axes] = axes_array.flatten().tolist()
+        axes: list[Axes] = axes_array.flatten().tolist()  # pyright: ignore[reportAssignmentType]
 
         # Deactivate unused subplots
         for i in range(n_subplots, len(axes)):

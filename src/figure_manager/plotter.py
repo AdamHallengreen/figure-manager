@@ -1,8 +1,9 @@
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
-from matplotlib.axes import Axes  # Correct import for Axes
+from matplotlib.axes import Axes
 
 
 def _print_verbose(message: str, warning: bool = False) -> None:
@@ -116,46 +117,43 @@ def _sort_groups(
 
 
 def _prepare_plot_data(
-    data: pl.DataFrame | pl.Series,
+    data: pl.DataFrame,
     x_col: str | None = None,
     y_col: str | None = None,
     group_by_cols: list[str] | str | None = None,
     sort_order: list[tuple | str | int] | None = None,
-    agg_fct=None,
+    agg_fct: Callable | None = None,
     bins: int | None = None,
     label: str | None = None,
     verbose: bool = False,
 ) -> tuple[dict[tuple, pl.DataFrame], dict[tuple, pl.DataFrame]]:
     """Prepares and sorts data for plotting."""
-    if isinstance(data, pl.DataFrame):
-        if isinstance(group_by_cols, str):
-            group_by_cols = [group_by_cols]
-        elif isinstance(group_by_cols, list):
-            group_by_cols = group_by_cols
-        else:
-            group_by_cols = []
-
-        if not group_by_cols:
-            pre_agg_data = {(label,): data}
-        else:
-            pre_agg_data = _sort_groups(data, group_by_cols, sort_order=sort_order)
-
-        if agg_fct and y_col:
-            over_columns = [x_col] + group_by_cols
-            data = (
-                data.group_by(over_columns)
-                .agg(agg_fct(y_col).alias(y_col))
-                .sort(over_columns)
-            )
-
-        if not group_by_cols:
-            sorted_groups = {(label,): data}
-        else:
-            sorted_groups = _sort_groups(data, group_by_cols, sort_order=sort_order)
-
-        return pre_agg_data, sorted_groups
+    if isinstance(group_by_cols, str):
+        group_by_cols = [group_by_cols]
+    elif isinstance(group_by_cols, list):
+        group_by_cols = group_by_cols
     else:
-        return {}, {(label,): data}
+        group_by_cols = []
+
+    if not group_by_cols:
+        pre_agg_data = {(label,): data}
+    else:
+        pre_agg_data = _sort_groups(data, group_by_cols, sort_order=sort_order)
+
+    if agg_fct and y_col:
+        over_columns = [x_col] + group_by_cols
+        data = (
+            data.group_by(over_columns)
+            .agg(agg_fct(y_col).alias(y_col))
+            .sort(over_columns)
+        )
+
+    if not group_by_cols:
+        sorted_groups = {(label,): data}
+    else:
+        sorted_groups = _sort_groups(data, group_by_cols, sort_order=sort_order)
+
+    return pre_agg_data, sorted_groups
 
 
 def generate_plot(
@@ -164,15 +162,15 @@ def generate_plot(
     y: str | None = None,
     plot_type: str = "plot",
     group_by: list[str] | str | None = None,
-    agg_fct=None,
+    agg_fct: Callable | None = None,
     ax: Axes | None = None,
     label: str | None = None,
     plot_settings: dict | None = None,
     verbose: bool = False,
     bins: int | None = None,
     sort_order: list[tuple | str | int] | None = None,
-    y_err: str | list[str] | None = None,
-    **ax_settings,
+    y_err: str | list[str] | tuple[str, str] | None = None,
+    **ax_settings,  # pyright: ignore[reportMissingParameterType]
 ) -> Axes:
     """
     Generates a plot from a Polars DataFrame with optional error bars
@@ -287,7 +285,6 @@ def generate_plot(
 
     for group_name, group_data in sorted_groups.items():
         x_values = group_data[x].to_numpy()
-        y_values = group_data[y].to_numpy() if y else None
         group_label = (
             ", ".join(map(str, group_name))
             if isinstance(group_name, tuple)
@@ -313,6 +310,7 @@ def generate_plot(
         else:
             plot_func = getattr(ax, plot_type)
             if y:
+                y_values = group_data[y].to_numpy()
                 if y_err:
                     if isinstance(y_err, str):
                         y_err_values = group_data[y_err].to_numpy()

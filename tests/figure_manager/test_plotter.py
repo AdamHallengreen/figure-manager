@@ -67,9 +67,9 @@ def test_generate_plot(sample_data):
 def test_generate_plot_invalid_data():
     """Test generate_plot with invalid data."""
     with pytest.raises(TypeError):
-        generate_plot(data=pl.Series, x="x", y="y")
-        
-        
+        generate_plot(data=pl.Series, x="x", y="y")  # pyright: ignore[reportArgumentType]
+
+
 def test_generate_plot_invalid_column():
     """Test generate_plot with invalid column."""
     with pytest.raises(ValueError):
