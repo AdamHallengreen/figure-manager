@@ -1,33 +1,19 @@
 name: Checks
 on: [push]
-
 jobs:
   lint:
+    name: Lint and format 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v1
+        uses: astral-sh/setup-uv@v5
 
       - name: "Set up Python"
         uses: actions/setup-python@v5
         with:
           python-version-file: ".python-version"
-
-      # Ensure the target directory for uv cache exists before trying to cache it
-      - name: Ensure uv cache directory exists
-        run: mkdir -p ~/.cache/uv
-
-      # Cache uv's global cache directory (now guaranteed to exist)
-      - name: Cache uv global directory
-        uses: actions/cache@v4
-        id: cache-uv # Add an id for potential future use/debugging
-        with:
-          path: ~/.cache/uv
-          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml', '**/requirements*.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
 
       - name: Check formatting with Ruff
         run: uv run ruff format --check .
@@ -36,115 +22,69 @@ jobs:
         run: uv run ruff check .
 
   type_check:
+    name: Type check
     runs-on: ubuntu-latest
-    # Run in parallel
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v1
+        uses: astral-sh/setup-uv@v5
 
       - name: "Set up Python"
         uses: actions/setup-python@v5
         with:
           python-version-file: ".python-version"
-
-      - name: Ensure uv cache directory exists
-        run: mkdir -p ~/.cache/uv
-
-      - name: Cache uv global directory
-        uses: actions/cache@v4
-        id: cache-uv
-        with:
-          path: ~/.cache/uv
-          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml', '**/requirements*.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
 
       - name: Run pyright
         run: uv run pyright
 
   test:
+    name: Test
     runs-on: ubuntu-latest
-    # Run in parallel
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v1
+        uses: astral-sh/setup-uv@v5
 
       - name: "Set up Python"
         uses: actions/setup-python@v5
         with:
           python-version-file: ".python-version"
 
-      - name: Ensure uv cache directory exists
-        run: mkdir -p ~/.cache/uv
-
-      - name: Cache uv global directory
-        uses: actions/cache@v4
-        id: cache-uv
-        with:
-          path: ~/.cache/uv
-          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml', '**/requirements*.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
-
       - name: Run pytest
         run: uv run pytest
 
   report:
+    name: Generate report
     runs-on: ubuntu-latest
     needs: [lint, type_check, test]
     permissions:
       contents: read
       pull-requests: write
       issues: write
+      discussions: write
+      checks: write
+      statuses: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
-      - name: Install system dependencies
+      - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libkrb5-dev yq imagemagick
-          sudo apt-get clean
-          sudo rm -rf /var/lib/apt/lists/*
+          sudo apt-get install -y libkrb5-dev yq imagemagick
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v1
+        uses: astral-sh/setup-uv@v5
 
       - name: "Set up Python"
         uses: actions/setup-python@v5
         with:
           python-version-file: ".python-version"
 
-      # Ensure uv cache directory exists here too
-      - name: Ensure uv cache directory exists
-        run: mkdir -p ~/.cache/uv
-
-      - name: Cache uv global directory
-        uses: actions/cache@v4
-        id: cache-uv
-        with:
-          path: ~/.cache/uv
-          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml', '**/requirements*.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
-
-      # Cache DVC data (remains the same)
-      - name: Cache DVC data
-        uses: actions/cache@v4
-        id: cache-dvc # Give DVC cache an id too
-        with:
-          path: .dvc/cache
-          key: ${{ runner.os }}-dvc-${{ hashFiles('dvc.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-dvc-
-
       - name: Set up CML
-        uses: iterative/setup-cml@v2
+        uses: iterative/setup-cml@v1
 
-      # dvc repro should benefit from both uv cache and dvc data cache
       - name: Create output
         run: uv run dvc repro
 
@@ -152,13 +92,13 @@ jobs:
         id: get_ext
         run: |
           FILE_EXT=$(yq '.figure_manager.file_ext' params.yaml)
+
           if [[ "$FILE_EXT" == '".pdf"' ]]; then
-            mogrify -format png outputs/figures/three_small_plots.pdf || true
-            mogrify -format png outputs/figures/two_std_dev_plots.pdf || true
+            mogrify -format png outputs/figures/three_small_plots.pdf
+            mogrify -format png outputs/figures/two_std_dev_plots.pdf
             echo "FILE_EXT=.png" >> $GITHUB_OUTPUT
           else
-            CLEAN_EXT=$(echo $FILE_EXT | sed 's/"//g')
-            echo "FILE_EXT=$CLEAN_EXT" >> $GITHUB_OUTPUT
+            echo "FILE_EXT=$FILE_EXT" >> $GITHUB_OUTPUT
           fi
 
       - name: Create report
@@ -166,14 +106,12 @@ jobs:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "# Parameters" > report.md
-          uv run dvc metrics show --md >> report.md || echo "Failed to get metrics" >> report.md
+          uv run dvc metrics show --md >> report.md
 
-          echo "" >> report.md
-          echo "## Main Plot" >> report.md
-          echo "![Main Plot](./outputs/figures/three_small_plots${{ steps.get_ext.outputs.FILE_EXT }})" >> report.md
+          echo "# Main Plot" >> report.md
+          echo "![Main Plot failed to display](./outputs/figures/three_small_plots${{ steps.get_ext.outputs.FILE_EXT }} \"Main plot\")" >> report.md
 
-          echo "" >> report.md
-          echo "## Standard Deviation Plot" >> report.md
-          echo "![Standard Deviation Plot](./outputs/figures/two_std_dev_plots${{ steps.get_ext.outputs.FILE_EXT }})" >> report.md
+          echo "# Standard Deviation Plot" >> report.md
+          echo "![Standard Deviation Plot failed to display](./outputs/figures/two_std_dev_plots${{ steps.get_ext.outputs.FILE_EXT }} \"Std. plot\")" >> report.md
 
           cml comment create report.md
