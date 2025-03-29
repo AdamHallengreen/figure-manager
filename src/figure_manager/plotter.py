@@ -158,7 +158,7 @@ def _prepare_plot_data(
 
 def generate_plot(
     data: pl.DataFrame,
-    x: str,
+    x,
     y: str | None = None,
     plot_type: str = "plot",
     group_by: list[str] | str | None = None,
