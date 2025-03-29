@@ -174,4 +174,7 @@ cython_debug/
 notebooks/* 
 !notebooks/*.ipynb 
 
+# MacOS
+.DS_Store
+
 # DVC

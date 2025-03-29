@@ -4,16 +4,18 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from cycler import cycler
 from matplotlib import transforms
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 
 class FigureManager:
     def __init__(
         self,
-        output_dir=Path("figures/"),
-        paper_size="A4",
-        file_ext=".pdf",
-        dpi=300,
-        use_latex=True,
+        output_dir: str | Path = Path("figures/"),
+        paper_size: str = "A4",
+        file_ext: str = ".pdf",
+        dpi: int = 300,
+        use_latex: bool = True,
     ):
         """Initialize figure manager with output and style parameters."""
         self.output_dir = Path(output_dir)
@@ -40,7 +42,7 @@ class FigureManager:
         self.n_cols = None
         self.n_subplots = None
 
-    def _apply_custom_style(self):
+    def _apply_custom_style(self) -> None:
         """Apply custom style settings."""
         # Axes properties
         plt.rcParams["axes.edgecolor"] = "0.15"
@@ -113,16 +115,24 @@ class FigureManager:
         plt.rcParams["savefig.format"] = "pdf"
         plt.rcParams["savefig.transparent"] = True
 
-    def _get_axis_extent(self, ax, padding):
+    def _get_axis_extent(self, ax: Axes, padding: float) -> transforms.Bbox:
         """Get the full bounding box of an axis including labels, ticks, and titles."""
+        if self.fig is None or self.fig.canvas is None:
+            raise RuntimeError("Figure is not initialized or canvas is unavailable.")
         self.fig.canvas.draw()
         elements = [ax, ax.xaxis.label, ax.yaxis.label, ax.title]
         bbox = transforms.Bbox.union([el.get_window_extent() for el in elements if el])
         return bbox.expanded(1.0 + padding, 1.0 + padding)
 
-    def _save_subplot(self, ax, filename, padding=0.05):
+    def _save_subplot(
+        self, ax: Axes, filename: str | Path, padding: float = 0.05
+    ) -> None:
         """Save individual subplot with precise cropping."""
         try:
+            if self.fig is None or self.fig.dpi_scale_trans is None:
+                raise RuntimeError(
+                    "Figure is not initialized or dpi_scale_trans is unavailable."
+                )
             bbox = self._get_axis_extent(ax, padding).transformed(
                 self.fig.dpi_scale_trans.inverted()
             )
@@ -137,7 +147,7 @@ class FigureManager:
         except Exception as e:
             print(f"Error saving subplot {filename}: {e}")
 
-    def set_figure_size(self, fig, n_rows: int, n_cols: int):
+    def set_figure_size(self, fig: Figure, n_rows: int, n_cols: int) -> None:
         """Set figure dimensions based on standard paper sizes."""
         paper_dimensions = {"A4": (8.27, 11.69), "A3": (11.69, 16.54)}
         width, height = paper_dimensions.get(
@@ -152,23 +162,18 @@ class FigureManager:
 
         fig.set_size_inches(usable_width, subplot_height * n_rows)
 
-    def create_figure(self, n_rows, n_cols, n_subplots):
+    def create_figure(
+        self, n_rows: int, n_cols: int, n_subplots: int
+    ) -> tuple[Figure, list[Axes]]:
         """Create a figure with subplots and apply formatting."""
-        # Validate inputs
-        if not (
-            isinstance(n_rows, int)
-            and isinstance(n_cols, int)
-            and isinstance(n_subplots, int)
-        ):
-            raise ValueError("n_rows, n_cols, and n_subplots must be integers")
         if n_subplots > n_rows * n_cols:
             raise ValueError("n_subplots cannot exceed n_rows * n_cols")
 
         # Apply custom style settings
         self._apply_custom_style()
 
-        fig, axes = plt.subplots(n_rows, n_cols, squeeze=False)
-        axes = axes.flatten()
+        fig, axes_array = plt.subplots(n_rows, n_cols, squeeze=False)
+        axes: list[Axes] = axes_array.flatten().tolist()
 
         # Deactivate unused subplots
         for i in range(n_subplots, len(axes)):
@@ -186,11 +191,11 @@ class FigureManager:
         self.n_cols = n_cols
         self.n_subplots = n_subplots
         self.fig = fig
-        self.axes = axes[:n_subplots]  # store active axes.
+        self.axes = axes[:n_subplots]
 
         return fig, axes[:n_subplots]
 
-    def save_figure(self, filename="figure"):
+    def save_figure(self, filename: str = "figure") -> None:
         """Save the full figure and individual subplots."""
         # Ensure create_figure has been called
         if self.fig is None or self.axes is None:
