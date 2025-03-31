@@ -16,8 +16,16 @@ class FigureManager:
         file_ext: str = ".pdf",
         dpi: int = 300,
         use_latex: bool = True,
-    ):
-        """Initialize figure manager with output and style parameters."""
+    ) -> None:
+        """
+        Initialize the FigureManager with output and style parameters.
+        Args:
+            output_dir (str | Path): Directory to save figures.
+            paper_size (str): Paper size for the figure.
+            file_ext (str): File extension for saved figures.
+            dpi (int): Dots per inch for figure resolution.
+            use_latex (bool): Whether to use LaTeX for text rendering.
+        """
         self.output_dir = Path(output_dir)
         self.paper_size = paper_size.lower()
         self.file_ext = file_ext
