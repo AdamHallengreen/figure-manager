@@ -1,3 +1,4 @@
+# type: ignore
 import argparse
 import json
 from pathlib import Path
@@ -33,6 +34,15 @@ def make_figures(
         use_latex=USE_LATEX,
     )
     make_figure_2(fm, data)
+
+    # make figure 3
+    fm = FigureManager(
+        output_dir=PROJECT_ROOT / FIGURES_DIR,
+        paper_size=PAPER_SIZE,
+        file_ext=FILE_EXT,
+        use_latex=USE_LATEX,
+    )
+    make_figure_3(fm, data, VERBOSE)
 
 
 def make_figure_1(fm, data, VERBOSE):
@@ -150,6 +160,28 @@ def make_figure_2(fm, data):
 
     # Save the entire figure and subplots
     fm.save_figure(filename="two_std_dev_plots")
+
+
+def make_figure_3(fm, data, VERBOSE):
+    # Create figure and subplot managers with specified layout
+    fig, axes = fm.create_figure(n_rows=1, n_cols=1, n_subplots=1)
+
+    axes[0] = generate_plot(
+        data,
+        x="school",
+        y="wage",
+        plot_type="plot",
+        x_bins=5,
+        group_by="residence",
+        agg_fct=pl.mean,
+        ax=axes[0],
+        verbose=VERBOSE,
+        xlabel="School",
+        ylabel="Wage",
+    )
+
+    # Save the entire figure and subplots
+    fm.save_figure(filename="one_big_plot")
 
 
 if __name__ == "__main__":
