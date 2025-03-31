@@ -16,8 +16,16 @@ class FigureManager:
         file_ext: str = ".pdf",
         dpi: int = 300,
         use_latex: bool = True,
-    ):
-        """Initialize figure manager with output and style parameters."""
+    ) -> None:
+        """
+        Initialize the FigureManager with output and style parameters.
+        Args:
+            output_dir (str | Path): Directory to save figures.
+            paper_size (str): Paper size for the figure.
+            file_ext (str): File extension for saved figures.
+            dpi (int): Dots per inch for figure resolution.
+            use_latex (bool): Whether to use LaTeX for text rendering.
+        """
         self.output_dir = Path(output_dir)
         self.paper_size = paper_size.lower()
         self.file_ext = file_ext
@@ -29,7 +37,6 @@ class FigureManager:
             plt.rc("text", usetex=True)
         else:
             plt.rc("text", usetex=False)
-        plt.rc("font", family="serif")
 
         # Set seaborn defaults
         sns.set_context("paper")  # Optimized for LaTeX documents
@@ -43,6 +50,10 @@ class FigureManager:
         self.n_subplots = None
 
     def _apply_custom_style(self) -> None:
+        """
+        The function `_apply_custom_style` sets custom style settings
+        for matplotlib plots.
+        """
         """Apply custom style settings."""
         # Axes properties
         plt.rcParams["axes.edgecolor"] = "0.15"
@@ -52,18 +63,18 @@ class FigureManager:
         plt.rcParams["axes.grid.which"] = "major"
         plt.rcParams["grid.linestyle"] = "dotted"
         plt.rcParams["grid.linewidth"] = 0.5
-        plt.rcParams["grid.alpha"] = 1.0  # Corrected line
+        plt.rcParams["grid.alpha"] = 1.0
         plt.rcParams["axes.facecolor"] = "white"
 
         # Font properties
+        plt.rcParams["axes.titlesize"] = 11
         plt.rcParams["font.size"] = 10
         plt.rcParams["font.family"] = "serif"
         plt.rcParams["mathtext.fontset"] = "dejavuserif"
 
         # Lines properties
-        plt.rcParams["lines.linewidth"] = 1.0
-        plt.rcParams["lines.markersize"] = 5
-        plt.rcParams["lines.marker"] = "o"
+        plt.rcParams["lines.linewidth"] = 2
+        plt.rcParams["lines.markersize"] = 6
         plt.rcParams["lines.markeredgewidth"] = 0.5
 
         # 12 colors for cycling
@@ -108,12 +119,12 @@ class FigureManager:
         # Figure properties
         plt.rcParams["figure.facecolor"] = "white"
         plt.rcParams["figure.edgecolor"] = "white"
-        plt.rcParams["figure.dpi"] = 300
+        plt.rcParams["figure.dpi"] = self.dpi
 
         # Save properties
-        plt.rcParams["savefig.dpi"] = 300
-        plt.rcParams["savefig.format"] = "pdf"
-        plt.rcParams["savefig.transparent"] = True
+        plt.rcParams["savefig.dpi"] = self.dpi
+        plt.rcParams["savefig.format"] = self.file_ext.strip(".")
+        plt.rcParams["savefig.transparent"] = False
 
     def _get_axis_extent(self, ax: Axes, padding: float) -> transforms.Bbox:
         """Get the full bounding box of an axis including labels, ticks, and titles."""
@@ -125,7 +136,11 @@ class FigureManager:
         return bbox.expanded(1.0 + padding, 1.0 + padding)
 
     def _save_subplot(
-        self, ax: Axes, filename: str | Path, padding: float = 0.05
+        self,
+        ax: Axes,
+        filename: str | Path,
+        padding: float = 0.05,
+        include_title: bool = True,
     ) -> None:
         """Save individual subplot with precise cropping."""
         try:
@@ -133,6 +148,8 @@ class FigureManager:
                 raise RuntimeError(
                     "Figure is not initialized or dpi_scale_trans is unavailable."
                 )
+            if not include_title:
+                ax.set_title("")
             bbox = self._get_axis_extent(ax, padding).transformed(
                 self.fig.dpi_scale_trans.inverted()
             )

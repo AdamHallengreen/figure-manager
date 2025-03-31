@@ -167,6 +167,7 @@ def generate_plot(
     label: str | None = None,
     plot_settings: dict | None = None,
     verbose: bool = False,
+    verbose_warning_threshold: int = 5,
     bins: int | None = None,
     sort_order: list[tuple | str | int] | None = None,
     y_err: str | list[str] | tuple[str, str] | None = None,
@@ -305,7 +306,7 @@ def generate_plot(
                 )
                 _print_verbose(
                     message,
-                    min_count <= 5,
+                    min_count <= verbose_warning_threshold,
                 )
         else:
             plot_func = getattr(ax, plot_type)
@@ -356,7 +357,7 @@ def generate_plot(
                     f"observations with fewest ({min_count}) "
                     f"at '{x}'={min_position}."
                 )
-                _print_verbose(message, min_count <= 5)
+                _print_verbose(message, min_count <= verbose_warning_threshold)
 
     if group_by or label:
         ax.legend()

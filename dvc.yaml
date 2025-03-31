@@ -18,5 +18,7 @@ stages:
     - outputs/figures/two_std_dev_plots_subplot_1${figure_manager.file_ext} 
     - outputs/figures/two_std_dev_plots_subplot_2${figure_manager.file_ext} 
     - outputs/figures/two_std_dev_plots${figure_manager.file_ext}
+    - outputs/figures/one_big_plot${figure_manager.file_ext}
+    - outputs/figures/one_big_plot_subplot_1${figure_manager.file_ext}
 metrics:
   - metrics.json
