@@ -51,7 +51,7 @@ class FigureManager:
 
     def _apply_custom_style(self) -> None:
         """
-        The function `_apply_custom_style` sets custom style settings 
+        The function `_apply_custom_style` sets custom style settings
         for matplotlib plots.
         """
         """Apply custom style settings."""
