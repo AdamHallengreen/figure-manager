@@ -246,6 +246,7 @@ colorama==0.4.6 \
     #   click
     #   dvc
     #   ipython
+    #   loguru
     #   pytest
     #   tqdm
 comm==0.2.2 \
@@ -720,6 +721,10 @@ kombu==5.5.1 \
     #   celery
     #   dvc
     #   dvc-task
+loguru==0.7.3 \
+    --hash=sha256:19480589e77d47b8d85b2c827ad95d49bf31b0dcde16593892eb51dd18706eb6 \
+    --hash=sha256:31a33c10c8e1e10422bfd431aeb5d351c7cf7fa671e3c4df004162264b28220c
+    # via figure-manager
 markdown-it-py==3.0.0 \
     --hash=sha256:355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1 \
     --hash=sha256:e3f60a94fa066dc52ec76661e37c851cb232d92f9886b15cb560aaada2df8feb
@@ -1685,6 +1690,10 @@ websocket-client==1.8.0 \
     --hash=sha256:17b44cc997f5c498e809b22cdf2d9c7a9e71c02c8cc2b6c56e7c2d1239bfa526 \
     --hash=sha256:3239df9f44da632f96012472805d40a23281a991027ce11d2f45a6f24ac4c3da
     # via jupyter-server
+win32-setctime==1.2.0 ; sys_platform == 'win32' \
+    --hash=sha256:95d644c4e708aba81dc3704a116d8cbc974d70b3bdb8be1d150e36be6e9d1390 \
+    --hash=sha256:ae1fdf948f5640aae05c511ade119313fb6a30d7eabe25fef9764dca5873c4c0
+    # via loguru
 yarl==1.18.3 \
     --hash=sha256:00e5a1fea0fd4f5bfa7440a47eff01d9822a65b4488f7cff83155a0f31a2ecba \
     --hash=sha256:1a74a13a4c857a84a845505fd2d68e54826a2cd01935a96efb1e9d86c728e186 \

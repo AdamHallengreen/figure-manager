@@ -5,6 +5,7 @@ from pathlib import Path
 
 import polars as pl
 import yaml
+from loguru import logger
 from polars import col as c
 
 from figure_manager import FigureManager, generate_plot
@@ -12,7 +13,7 @@ from utils.find_project_root import find_project_root
 
 
 def make_figures(
-    EXTERNAL_DATA_PATH, FIGURES_DIR, PAPER_SIZE, FILE_EXT, USE_LATEX, VERBOSE
+    EXTERNAL_DATA_PATH, FIGURES_DIR, PAPER_SIZE, FILE_EXT, USE_LATEX, VERBOSE, LOG_DIR
 ):
     # Load data
     data = pl.read_csv(PROJECT_ROOT / EXTERNAL_DATA_PATH / "Males.csv")
@@ -24,7 +25,7 @@ def make_figures(
         file_ext=FILE_EXT,
         use_latex=USE_LATEX,
     )
-    make_figure_1(fm, data, VERBOSE)
+    make_figure_1(fm, data, VERBOSE, LOG_DIR)
 
     # make figure 2
     fm = FigureManager(
@@ -33,7 +34,7 @@ def make_figures(
         file_ext=FILE_EXT,
         use_latex=USE_LATEX,
     )
-    make_figure_2(fm, data)
+    make_figure_2(fm, data, VERBOSE, LOG_DIR)
 
     # make figure 3
     fm = FigureManager(
@@ -42,10 +43,17 @@ def make_figures(
         file_ext=FILE_EXT,
         use_latex=USE_LATEX,
     )
-    make_figure_3(fm, data, VERBOSE)
+    make_figure_3(fm, data, VERBOSE, LOG_DIR)
 
 
-def make_figure_1(fm, data, VERBOSE):
+def make_figure_1(fm, data, VERBOSE, LOG_DIR):
+    if VERBOSE:
+        logger.add(
+            PROJECT_ROOT / LOG_DIR / "figure_1_{time:YYYY-MM-DD_HH-mm}.log",
+            level="DEBUG",
+            retention=1,
+        )
+
     # Create figure and subplot managers with specified layout
     fig, axes = fm.create_figure(n_rows=2, n_cols=2, n_subplots=3)
 
@@ -92,7 +100,13 @@ def make_figure_1(fm, data, VERBOSE):
     fm.save_figure(filename="three_small_plots")
 
 
-def make_figure_2(fm, data):
+def make_figure_2(fm, data, VERBOSE, LOG_DIR):
+    if VERBOSE:
+        logger.add(
+            PROJECT_ROOT / LOG_DIR / "figure_2_{time:YYYY-MM-DD_HH-mm}.log",
+            level="DEBUG",
+            retention=1,
+        )
     cd = (
         data.group_by("school")
         .agg(
@@ -162,7 +176,13 @@ def make_figure_2(fm, data):
     fm.save_figure(filename="two_std_dev_plots")
 
 
-def make_figure_3(fm, data, VERBOSE):
+def make_figure_3(fm, data, VERBOSE, LOG_DIR):
+    if VERBOSE:
+        logger.add(
+            PROJECT_ROOT / LOG_DIR / "figure_3_{time:YYYY-MM-DD_HH-mm}.log",
+            level="DEBUG",
+            retention=1,
+        )
     # Create figure and subplot managers with specified layout
     fig, axes = fm.create_figure(n_rows=1, n_cols=1, n_subplots=1)
 
@@ -199,6 +219,7 @@ if __name__ == "__main__":
     FILE_EXT: str = params["figure_manager"]["file_ext"]
     USE_LATEX: bool = params["figure_manager"]["use_latex"]
     VERBOSE: bool = params["plotter"]["verbose"]
+    LOG_DIR: bool = Path(params["plotter"]["log_dir"])
 
     # output 4 random key value pairs to a metrics.json file
     # to be used by the CI/CD pipeline
@@ -214,5 +235,11 @@ if __name__ == "__main__":
     # Call the make_figures function to generate the figures
 
     make_figures(
-        EXTERNAL_DATA_PATH, FIGURES_DIR, PAPER_SIZE, FILE_EXT, USE_LATEX, VERBOSE
+        EXTERNAL_DATA_PATH,
+        FIGURES_DIR,
+        PAPER_SIZE,
+        FILE_EXT,
+        USE_LATEX,
+        VERBOSE,
+        LOG_DIR,
     )

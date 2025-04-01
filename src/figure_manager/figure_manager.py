@@ -3,6 +3,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
 from cycler import cycler
+from loguru import logger
 from matplotlib import transforms
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -160,9 +161,9 @@ class FigureManager:
                 format=self.file_ext.strip("."),
                 transparent=True,
             )
-            print(f"Saved subplot to {filename}")
+            logger.success(f"Saved subplot to {filename}")
         except Exception as e:
-            print(f"Error saving subplot {filename}: {e}")
+            logger.error(f"Error saving subplot {filename}: {e}")
 
     def set_figure_size(self, fig: Figure, n_rows: int, n_cols: int) -> None:
         """Set figure dimensions based on standard paper sizes."""
@@ -218,6 +219,11 @@ class FigureManager:
         if self.fig is None or self.axes is None:
             raise RuntimeError("Call create_figure before saving the figure.")
 
+        # If path does not exist, create it
+        if not self.output_dir.exists():
+            logger.info(f"Creating output directory: {self.output_dir}")
+            self.output_dir.mkdir(parents=True, exist_ok=True)
+
         # Apply tight layout before saving
         self.fig.tight_layout()
 
@@ -231,9 +237,9 @@ class FigureManager:
                 format=self.file_ext.strip("."),
                 transparent=True,
             )
-            print(f"Saved full figure to {full_path}")
+            logger.success(f"Saved full figure to {full_path}")
         except Exception as e:
-            print(f"Error saving full figure: {e}")
+            logger.error(f"Error saving full figure: {e}")
 
         # Save each subplot separately
         for i, ax in enumerate(self.axes):

@@ -1,5 +1,5 @@
 {
-    "verbose": false,
+    "verbose": true,
     "external_data_path": "data",
     "use_latex": false
 }
