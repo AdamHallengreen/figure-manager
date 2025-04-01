@@ -3,15 +3,16 @@ from collections.abc import Callable
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
+from loguru import logger
 from matplotlib.axes import Axes
 
 
 def _print_verbose(message: str, warning: bool = False) -> None:
     """Prints a verbose message with optional warning."""
     if warning:
-        print(f"WARNING: {message}")
+        logger.warning(message)
     else:
-        print(message)
+        logger.info(message)
 
 
 def _get_min_count_info(
@@ -361,9 +362,6 @@ def generate_plot(
 
     if group_by or label:
         ax.legend()
-
-    if verbose:
-        print("")
 
     _setup_plot_axes(ax, x, y, plot_type, ax_settings)
     return ax

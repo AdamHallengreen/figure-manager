@@ -8,4 +8,5 @@ figure_manager:
   use_latex: False
   
 plotter:
-  verbose: False
+  verbose: True
+  log_dir: outputs/logs
