@@ -3,7 +3,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
 from cycler import cycler
-from loguru import logger
 from matplotlib import transforms
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -17,6 +16,8 @@ class FigureManager:
         file_ext: str = ".pdf",
         dpi: int = 300,
         use_latex: bool = True,
+        cycle_linestyles: bool = False,
+        cycle_markers: bool = False,
     ) -> None:
         """
         Initialize the FigureManager with output and style parameters.
@@ -26,12 +27,16 @@ class FigureManager:
             file_ext (str): File extension for saved figures.
             dpi (int): Dots per inch for figure resolution.
             use_latex (bool): Whether to use LaTeX for text rendering.
+            cycle_linestyles (bool): Whether to cycle through line styles.
+            cycle_markers (bool): Whether to cycle through markers.
         """
         self.output_dir = Path(output_dir)
         self.paper_size = paper_size.lower()
         self.file_ext = file_ext
         self.dpi = dpi
         self.use_latex = use_latex
+        self.cycle_linestyles = cycle_linestyles
+        self.cycle_markers = cycle_markers
 
         # Enable LaTeX rendering for text
         if use_latex:
@@ -97,11 +102,12 @@ class FigureManager:
         # Cycle through colors only
         # plt.rcParams['axes.prop_cycle'] = cycler('color', colors)
         # Cycle through colors and line styles and markers
-        plt.rcParams["axes.prop_cycle"] = (
-            cycler("color", colors)
-            + cycler("linestyle", 3 * ["-", "--", "-.", ":"])
-            + cycler("marker", 2 * ["o", "s", "D", "^", "v", "x"])
-        )
+        cycles = cycler("color", colors)
+        if self.cycle_linestyles:
+            cycles += cycler("linestyle", 3 * ["-", "--", "-.", ":"])
+        if self.cycle_markers:
+            cycles += cycler("marker", 2 * ["o", "s", "D", "^", "v", "x"])
+        plt.rcParams["axes.prop_cycle"] = cycles
 
         # Ticks properties
         plt.rcParams["xtick.major.size"] = 4
@@ -149,11 +155,25 @@ class FigureManager:
                 raise RuntimeError(
                     "Figure is not initialized or dpi_scale_trans is unavailable."
                 )
+
+            # Store original visibility of all axes
+            all_axes = self.fig.axes
+            original_visibility = [a.get_visible() for a in all_axes]
+
+            # Hide all other axes so their labels don't affect the bbox
+            for other_ax in all_axes:
+                if other_ax is not ax:
+                    other_ax.set_visible(False)
+
+            original_title = ax.get_title()
             if not include_title:
                 ax.set_title("")
+
+            self.fig.canvas.draw()
             bbox = self._get_axis_extent(ax, padding).transformed(
                 self.fig.dpi_scale_trans.inverted()
             )
+
             self.fig.savefig(
                 filename,
                 dpi=self.dpi,
@@ -161,16 +181,28 @@ class FigureManager:
                 format=self.file_ext.strip("."),
                 transparent=True,
             )
-            logger.success(f"Saved subplot to {filename}")
-        except Exception as e:
-            logger.error(f"Error saving subplot {filename}: {e}")
 
-    def set_figure_size(self, fig: Figure, n_rows: int, n_cols: int) -> None:
+            # Restore title
+            if not include_title:
+                ax.set_title(original_title)
+
+            # Restore visibility
+            for other_ax, vis in zip(all_axes, original_visibility):
+                other_ax.set_visible(vis)
+
+            print(f"Saved subplot to {filename}")
+
+        except Exception as e:
+            print(f"Error saving subplot {filename}: {e}")
+
+    def set_figure_size(self, fig: Figure, n_rows: int, n_cols: int, horizontal: bool = False) -> None:
         """Set figure dimensions based on standard paper sizes."""
         paper_dimensions = {"A4": (8.27, 11.69), "A3": (11.69, 16.54)}
         width, height = paper_dimensions.get(
             self.paper_size, paper_dimensions["A4"]
         )  # default to A4
+        if horizontal:
+            width, height = height, width
 
         # Adjust for margins (1 inch total) and maintain aspect ratio
         margin = 0.5  # 0.5 inch margin on each side
@@ -181,7 +213,7 @@ class FigureManager:
         fig.set_size_inches(usable_width, subplot_height * n_rows)
 
     def create_figure(
-        self, n_rows: int, n_cols: int, n_subplots: int
+        self, n_rows: int, n_cols: int, n_subplots: int, horizontal: bool = False, projection: str | None = None
     ) -> tuple[Figure, list[Axes]]:
         """Create a figure with subplots and apply formatting."""
         if n_subplots > n_rows * n_cols:
@@ -190,7 +222,7 @@ class FigureManager:
         # Apply custom style settings
         self._apply_custom_style()
 
-        fig, axes_array = plt.subplots(n_rows, n_cols, squeeze=False)
+        fig, axes_array = plt.subplots(n_rows, n_cols, squeeze=False, subplot_kw={'projection': projection})
         axes: list[Axes] = axes_array.flatten().tolist()  # pyright: ignore[reportAssignmentType]
 
         # Deactivate unused subplots
@@ -198,7 +230,7 @@ class FigureManager:
             axes[i].axis("off")
 
         # Set figure size
-        self.set_figure_size(fig, n_rows, n_cols)
+        self.set_figure_size(fig, n_rows, n_cols, horizontal)
 
         # Apply styles to active subplots
         for ax in axes[:n_subplots]:
@@ -213,7 +245,7 @@ class FigureManager:
 
         return fig, axes[:n_subplots]
 
-    def save_figure(self, filename: str = "figure") -> None:
+    def save_figure(self, filename: str = "figure", include_title: bool = True, subplot_settings: dict = {}) -> None:
         """Save the full figure and individual subplots."""
         # Ensure create_figure has been called
         if self.fig is None or self.axes is None:
@@ -221,7 +253,7 @@ class FigureManager:
 
         # If path does not exist, create it
         if not self.output_dir.exists():
-            logger.info(f"Creating output directory: {self.output_dir}")
+            print(f"Creating output directory: {self.output_dir}")
             self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # Apply tight layout before saving
@@ -237,13 +269,13 @@ class FigureManager:
                 format=self.file_ext.strip("."),
                 transparent=True,
             )
-            logger.success(f"Saved full figure to {full_path}")
+            print(f"Saved full figure to {full_path}")
         except Exception as e:
-            logger.error(f"Error saving full figure: {e}")
+            print(f"Error saving full figure: {e}")
 
         # Save each subplot separately
         for i, ax in enumerate(self.axes):
             subplot_path = (
                 self.output_dir / f"{filename}_subplot_{i + 1}{self.file_ext}"
             )
-            self._save_subplot(ax, subplot_path)
+            self._save_subplot(ax, subplot_path, include_title=include_title, **subplot_settings)
