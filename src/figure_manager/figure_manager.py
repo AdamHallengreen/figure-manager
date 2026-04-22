@@ -187,7 +187,7 @@ class FigureManager:
                 ax.set_title(original_title)
 
             # Restore visibility
-            for other_ax, vis in zip(all_axes, original_visibility):
+            for other_ax, vis in zip(all_axes, original_visibility, strict=False):
                 other_ax.set_visible(vis)
 
             print(f"Saved subplot to {filename}")
@@ -195,7 +195,9 @@ class FigureManager:
         except Exception as e:
             print(f"Error saving subplot {filename}: {e}")
 
-    def set_figure_size(self, fig: Figure, n_rows: int, n_cols: int, horizontal: bool = False) -> None:
+    def set_figure_size(
+        self, fig: Figure, n_rows: int, n_cols: int, horizontal: bool = False
+    ) -> None:
         """Set figure dimensions based on standard paper sizes."""
         paper_dimensions = {"A4": (8.27, 11.69), "A3": (11.69, 16.54)}
         width, height = paper_dimensions.get(
@@ -213,7 +215,12 @@ class FigureManager:
         fig.set_size_inches(usable_width, subplot_height * n_rows)
 
     def create_figure(
-        self, n_rows: int, n_cols: int, n_subplots: int, horizontal: bool = False, projection: str | None = None
+        self,
+        n_rows: int,
+        n_cols: int,
+        n_subplots: int,
+        horizontal: bool = False,
+        projection: str | None = None,
     ) -> tuple[Figure, list[Axes]]:
         """Create a figure with subplots and apply formatting."""
         if n_subplots > n_rows * n_cols:
@@ -222,7 +229,9 @@ class FigureManager:
         # Apply custom style settings
         self._apply_custom_style()
 
-        fig, axes_array = plt.subplots(n_rows, n_cols, squeeze=False, subplot_kw={'projection': projection})
+        fig, axes_array = plt.subplots(
+            n_rows, n_cols, squeeze=False, subplot_kw={"projection": projection}
+        )
         axes: list[Axes] = axes_array.flatten().tolist()  # pyright: ignore[reportAssignmentType]
 
         # Deactivate unused subplots
@@ -245,9 +254,16 @@ class FigureManager:
 
         return fig, axes[:n_subplots]
 
-    def save_figure(self, filename: str = "figure", include_title: bool = True, subplot_settings: dict = {}) -> None:
+    def save_figure(
+        self,
+        filename: str = "figure",
+        include_title: bool = True,
+        subplot_settings: dict | None = None,
+    ) -> None:
         """Save the full figure and individual subplots."""
         # Ensure create_figure has been called
+        if subplot_settings is None:
+            subplot_settings = {}
         if self.fig is None or self.axes is None:
             raise RuntimeError("Call create_figure before saving the figure.")
 
@@ -278,4 +294,6 @@ class FigureManager:
             subplot_path = (
                 self.output_dir / f"{filename}_subplot_{i + 1}{self.file_ext}"
             )
-            self._save_subplot(ax, subplot_path, include_title=include_title, **subplot_settings)
+            self._save_subplot(
+                ax, subplot_path, include_title=include_title, **subplot_settings
+            )
