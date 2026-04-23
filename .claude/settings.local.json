@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"from cycler import cycler; c1 = cycler\\(color=['r','g']\\); c2 = cycler\\(linestyle=['-','--']\\); print\\('add:', c1+c2\\); print\\('mul:', c1*c2\\)\")",
+      "Bash(uv run *)"
+    ]
+  }
+}

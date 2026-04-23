@@ -1,299 +1,284 @@
-from pathlib import Path
+from __future__ import annotations
 
+import json
+from dataclasses import dataclass
+from importlib.resources import files
+from pathlib import Path
+from typing import Literal
+
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
-from cycler import cycler
-from matplotlib import transforms
+from cycler import Cycler, cycler
+from loguru import logger
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from matplotlib.transforms import Bbox
+
+
+@dataclass
+class CycleConfig:
+    cycle_linestyles: bool = False
+    cycle_markers: bool = False
+    mode: Literal["together", "after_colors"] = "after_colors"
+
+
+_CYCLE_PRESETS: dict[str, CycleConfig] = {
+    "linestyles": CycleConfig(cycle_linestyles=True, mode="together"),
+    "markers": CycleConfig(cycle_markers=True, mode="together"),
+    "full": CycleConfig(cycle_linestyles=True, cycle_markers=True, mode="together"),
+    "linestyles_sequential": CycleConfig(cycle_linestyles=True),
+    "markers_sequential": CycleConfig(cycle_markers=True),
+    "full_sequential": CycleConfig(cycle_linestyles=True, cycle_markers=True),
+}
+
+
+def _load_style(source: str | Path | dict) -> dict:  # type: ignore[type-arg]
+    if isinstance(source, dict):
+        return source
+    if isinstance(source, str):
+        ref = files("figure_manager") / "styles" / f"{source}.json"
+        return json.loads(ref.read_text(encoding="utf-8"))
+    return json.loads(Path(source).read_text(encoding="utf-8"))
+
+
+def _load_palette(source: str | Path | dict | list) -> dict:  # type: ignore[type-arg]
+    if isinstance(source, dict):
+        return source
+    if isinstance(source, list):
+        return {"colors": source}
+    if isinstance(source, str):
+        ref = files("figure_manager") / "palettes" / f"{source}.json"
+        return json.loads(ref.read_text(encoding="utf-8"))
+    return json.loads(Path(source).read_text(encoding="utf-8"))
+
+
+def _build_rc_params(style: dict, use_latex: bool) -> dict:  # type: ignore[type-arg]
+    rc: dict = dict(style.get("rc", {}))  # type: ignore[type-arg]
+    rc["text.usetex"] = use_latex
+    return rc
+
+
+def _build_prop_cycle(palette: dict, cycle: CycleConfig | None) -> Cycler:  # type: ignore[type-arg]
+    colors = palette.get("colors", [])
+    linestyles = palette.get("linestyles", [])
+    markers = palette.get("markers", [])
+
+    if cycle is None:
+        return cycler(color=colors)
+
+    color_cycler = cycler(color=colors)
+
+    if cycle.mode == "together":
+        result = color_cycler
+        if cycle.cycle_linestyles and linestyles:
+            result = result + cycler(linestyle=linestyles)
+        if cycle.cycle_markers and markers:
+            result = result + cycler(marker=markers)
+        return result
+
+    # mode == "after_colors": style changes after all colors exhausted
+    if cycle.cycle_linestyles and cycle.cycle_markers and linestyles and markers:
+        style_cycler = cycler(linestyle=linestyles) + cycler(marker=markers)
+        return style_cycler * color_cycler
+    if cycle.cycle_linestyles and linestyles:
+        return cycler(linestyle=linestyles) * color_cycler
+    if cycle.cycle_markers and markers:
+        return cycler(marker=markers) * color_cycler
+    return color_cycler
+
+
+def _get_figure_size(
+    style: dict,  # type: ignore[type-arg]
+    paper_size: str,
+    n_rows: int,
+    n_cols: int,
+    landscape: bool,
+) -> tuple[float, float]:
+    layout = style.get("layout", {})
+    paper_sizes = layout.get("paper_sizes", {"A4": [8.27, 11.69]})
+    page_margin = layout.get("page_margin", 0.5)
+    subplot_aspect = layout.get("subplot_aspect", 0.75)
+
+    dims = paper_sizes.get(paper_size, paper_sizes.get("A4", [8.27, 11.69]))
+    width = dims[1] if landscape else dims[0]
+
+    usable_width = width - 2 * page_margin
+    subplot_height = (usable_width / n_cols) * subplot_aspect
+    return usable_width, subplot_height * n_rows
+
+
+def _get_ax_extent(fig: Figure, ax: Axes, padding: float) -> Bbox:
+    fig.canvas.draw()
+    elements = [ax, ax.xaxis.label, ax.yaxis.label, ax.title]
+    bbox = Bbox.union([el.get_window_extent() for el in elements if el.get_visible()])
+    return bbox.expanded(1.0 + padding, 1.0 + padding).transformed(
+        fig.dpi_scale_trans.inverted()
+    )
+
+
+def _resolve_path(filename: str | Path, output_dir: Path | None) -> Path:
+    p = Path(filename)
+    if p.is_absolute():
+        return p
+    base = output_dir if output_dir is not None else Path.cwd()
+    return base / p
 
 
 class FigureManager:
     def __init__(
         self,
-        output_dir: str | Path = Path("figures/"),
+        output_dir: Path | str | None = None,
         paper_size: str = "A4",
-        file_ext: str = ".pdf",
-        dpi: int = 300,
         use_latex: bool = True,
-        cycle_linestyles: bool = False,
-        cycle_markers: bool = False,
+        style: str | Path | dict = "default",  # type: ignore[type-arg]
+        palette: str | Path | dict = "deep",  # type: ignore[type-arg]
     ) -> None:
-        """
-        Initialize the FigureManager with output and style parameters.
-        Args:
-            output_dir (str | Path): Directory to save figures.
-            paper_size (str): Paper size for the figure.
-            file_ext (str): File extension for saved figures.
-            dpi (int): Dots per inch for figure resolution.
-            use_latex (bool): Whether to use LaTeX for text rendering.
-            cycle_linestyles (bool): Whether to cycle through line styles.
-            cycle_markers (bool): Whether to cycle through markers.
-        """
-        self.output_dir = Path(output_dir)
-        self.paper_size = paper_size.lower()
-        self.file_ext = file_ext
-        self.dpi = dpi
+        if output_dir is not None:
+            logger.info(
+                "output_dir is set to '{}' - figures will be saved relative to "
+                "this path instead of the working directory.",
+                output_dir,
+            )
+        self.output_dir = Path(output_dir) if output_dir is not None else None
+        self.paper_size = paper_size
         self.use_latex = use_latex
-        self.cycle_linestyles = cycle_linestyles
-        self.cycle_markers = cycle_markers
-
-        # Enable LaTeX rendering for text
-        if use_latex:
-            plt.rc("text", usetex=True)
-        else:
-            plt.rc("text", usetex=False)
-
-        # Set seaborn defaults
-        sns.set_context("paper")  # Optimized for LaTeX documents
-        sns.set_palette("deep")
-
-        # Internal figure tracking
-        self.fig = None
-        self.axes = None
-        self.n_rows = None
-        self.n_cols = None
-        self.n_subplots = None
-
-    def _apply_custom_style(self) -> None:
-        """
-        The function `_apply_custom_style` sets custom style settings
-        for matplotlib plots.
-        """
-        """Apply custom style settings."""
-        # Axes properties
-        plt.rcParams["axes.edgecolor"] = "0.15"
-        plt.rcParams["axes.linewidth"] = 0.8
-        plt.rcParams["axes.grid"] = True
-        plt.rcParams["axes.grid.axis"] = "y"
-        plt.rcParams["axes.grid.which"] = "major"
-        plt.rcParams["grid.linestyle"] = "dotted"
-        plt.rcParams["grid.linewidth"] = 0.5
-        plt.rcParams["grid.alpha"] = 1.0
-        plt.rcParams["axes.facecolor"] = "white"
-
-        # Font properties
-        plt.rcParams["axes.titlesize"] = 11
-        plt.rcParams["font.size"] = 10
-        plt.rcParams["font.family"] = "serif"
-        plt.rcParams["mathtext.fontset"] = "dejavuserif"
-
-        # Lines properties
-        plt.rcParams["lines.linewidth"] = 2
-        plt.rcParams["lines.markersize"] = 6
-        plt.rcParams["lines.markeredgewidth"] = 0.5
-
-        # 12 colors for cycling
-        colors = [
-            "#EF476F",
-            "#1082A8",
-            "#FFD166",
-            "#06EFB1",
-            "#08485E",
-            "#FF6F61",
-            "#1B998B",
-            "#C6C013",
-            "#5A189A",
-            "#A7C957",
-            "#D4A5A5",
-            "#3D348B",
-        ]
-
-        # Cycle through colors only
-        # plt.rcParams['axes.prop_cycle'] = cycler('color', colors)
-        # Cycle through colors and line styles and markers
-        cycles = cycler("color", colors)
-        if self.cycle_linestyles:
-            cycles += cycler("linestyle", 3 * ["-", "--", "-.", ":"])
-        if self.cycle_markers:
-            cycles += cycler("marker", 2 * ["o", "s", "D", "^", "v", "x"])
-        plt.rcParams["axes.prop_cycle"] = cycles
-
-        # Ticks properties
-        plt.rcParams["xtick.major.size"] = 4
-        plt.rcParams["xtick.major.width"] = 0.8
-        plt.rcParams["xtick.minor.size"] = 2
-        plt.rcParams["xtick.minor.width"] = 0.5
-        plt.rcParams["ytick.major.size"] = 4
-        plt.rcParams["ytick.major.width"] = 0.8
-        plt.rcParams["ytick.minor.size"] = 2
-        plt.rcParams["ytick.minor.width"] = 0.5
-
-        # Legend properties
-        plt.rcParams["legend.frameon"] = False
-        plt.rcParams["legend.fontsize"] = 9
-
-        # Figure properties
-        plt.rcParams["figure.facecolor"] = "white"
-        plt.rcParams["figure.edgecolor"] = "white"
-        plt.rcParams["figure.dpi"] = self.dpi
-
-        # Save properties
-        plt.rcParams["savefig.dpi"] = self.dpi
-        plt.rcParams["savefig.format"] = self.file_ext.strip(".")
-        plt.rcParams["savefig.transparent"] = False
-
-    def _get_axis_extent(self, ax: Axes, padding: float) -> transforms.Bbox:
-        """Get the full bounding box of an axis including labels, ticks, and titles."""
-        if self.fig is None or self.fig.canvas is None:
-            raise RuntimeError("Figure is not initialized or canvas is unavailable.")
-        self.fig.canvas.draw()
-        elements = [ax, ax.xaxis.label, ax.yaxis.label, ax.title]
-        bbox = transforms.Bbox.union([el.get_window_extent() for el in elements if el])
-        return bbox.expanded(1.0 + padding, 1.0 + padding)
-
-    def _save_subplot(
-        self,
-        ax: Axes,
-        filename: str | Path,
-        padding: float = 0.05,
-        include_title: bool = True,
-    ) -> None:
-        """Save individual subplot with precise cropping."""
-        try:
-            if self.fig is None or self.fig.dpi_scale_trans is None:
-                raise RuntimeError(
-                    "Figure is not initialized or dpi_scale_trans is unavailable."
-                )
-
-            # Store original visibility of all axes
-            all_axes = self.fig.axes
-            original_visibility = [a.get_visible() for a in all_axes]
-
-            # Hide all other axes so their labels don't affect the bbox
-            for other_ax in all_axes:
-                if other_ax is not ax:
-                    other_ax.set_visible(False)
-
-            original_title = ax.get_title()
-            if not include_title:
-                ax.set_title("")
-
-            self.fig.canvas.draw()
-            bbox = self._get_axis_extent(ax, padding).transformed(
-                self.fig.dpi_scale_trans.inverted()
-            )
-
-            self.fig.savefig(
-                filename,
-                dpi=self.dpi,
-                bbox_inches=bbox,
-                format=self.file_ext.strip("."),
-                transparent=True,
-            )
-
-            # Restore title
-            if not include_title:
-                ax.set_title(original_title)
-
-            # Restore visibility
-            for other_ax, vis in zip(all_axes, original_visibility, strict=False):
-                other_ax.set_visible(vis)
-
-            print(f"Saved subplot to {filename}")
-
-        except Exception as e:
-            print(f"Error saving subplot {filename}: {e}")
-
-    def set_figure_size(
-        self, fig: Figure, n_rows: int, n_cols: int, horizontal: bool = False
-    ) -> None:
-        """Set figure dimensions based on standard paper sizes."""
-        paper_dimensions = {"A4": (8.27, 11.69), "A3": (11.69, 16.54)}
-        width, height = paper_dimensions.get(
-            self.paper_size, paper_dimensions["A4"]
-        )  # default to A4
-        if horizontal:
-            width, height = height, width
-
-        # Adjust for margins (1 inch total) and maintain aspect ratio
-        margin = 0.5  # 0.5 inch margin on each side
-        usable_width = width - 2 * margin
-        subplot_width = usable_width / n_cols
-        subplot_height = subplot_width * 0.75  # Adjusted for better LaTeX fit
-
-        fig.set_size_inches(usable_width, subplot_height * n_rows)
+        self._style: dict = _load_style(style)  # type: ignore[type-arg]
+        self._palette: dict = _load_palette(palette)  # type: ignore[type-arg]
+        self._rc_params: dict = _build_rc_params(self._style, use_latex)  # type: ignore[type-arg]
 
     def create_figure(
         self,
         n_rows: int,
         n_cols: int,
-        n_subplots: int,
-        horizontal: bool = False,
-        projection: str | None = None,
+        n_subplots: int | None = None,
+        landscape: bool = False,
+        sharex: bool = False,
+        sharey: bool = False,
+        subplot_kw: dict | None = None,  # type: ignore[type-arg]
+        gridspec_kw: dict | None = None,  # type: ignore[type-arg]
+        cycle: CycleConfig | str | None = None,
     ) -> tuple[Figure, list[Axes]]:
-        """Create a figure with subplots and apply formatting."""
+        if isinstance(cycle, str):
+            if cycle not in _CYCLE_PRESETS:
+                raise ValueError(
+                    f"Unknown cycle preset {cycle!r}. "
+                    f"Choose from: {list(_CYCLE_PRESETS)}"
+                )
+            cycle = _CYCLE_PRESETS[cycle]
+        if n_subplots is None:
+            n_subplots = n_rows * n_cols
         if n_subplots > n_rows * n_cols:
-            raise ValueError("n_subplots cannot exceed n_rows * n_cols")
+            raise ValueError(
+                f"n_subplots ({n_subplots}) cannot exceed "
+                f"n_rows * n_cols ({n_rows * n_cols})"
+            )
 
-        # Apply custom style settings
-        self._apply_custom_style()
-
-        fig, axes_array = plt.subplots(
-            n_rows, n_cols, squeeze=False, subplot_kw={"projection": projection}
+        rc = {
+            **self._rc_params,
+            "axes.prop_cycle": _build_prop_cycle(self._palette, cycle),
+        }
+        fig_w, fig_h = _get_figure_size(
+            self._style, self.paper_size, n_rows, n_cols, landscape
         )
+
+        with mpl.rc_context(rc):
+            fig, axes_array = plt.subplots(
+                n_rows,
+                n_cols,
+                squeeze=False,
+                layout="constrained",
+                sharex=sharex,
+                sharey=sharey,
+                subplot_kw=subplot_kw or {},
+                gridspec_kw=gridspec_kw or {},
+            )
+
         axes: list[Axes] = axes_array.flatten().tolist()  # pyright: ignore[reportAssignmentType]
+        fig.set_size_inches(fig_w, fig_h)
 
-        # Deactivate unused subplots
-        for i in range(n_subplots, len(axes)):
-            axes[i].axis("off")
+        for ax in axes[n_subplots:]:
+            ax.axis("off")
 
-        # Set figure size
-        self.set_figure_size(fig, n_rows, n_cols, horizontal)
-
-        # Apply styles to active subplots
         for ax in axes[:n_subplots]:
             sns.despine(ax=ax)
-
-        # Store these for later use in save_figure
-        self.n_rows = n_rows
-        self.n_cols = n_cols
-        self.n_subplots = n_subplots
-        self.fig = fig
-        self.axes = axes[:n_subplots]
 
         return fig, axes[:n_subplots]
 
     def save_figure(
         self,
-        filename: str = "figure",
+        fig: Figure,
+        filename: str | Path = "figure.pdf",
+        transparent: bool = False,
+        save_subplots: bool = False,
+        subplot_include_title: bool = True,
+        subplot_suffix: str = "_subplot",
+    ) -> Path:
+        path = _resolve_path(filename, self.output_dir)
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        ext = path.suffix
+        if not ext:
+            logger.warning("No file extension in '{}'; defaulting to .pdf", filename)
+            path = path.with_suffix(".pdf")
+            ext = ".pdf"
+        fmt = ext.lstrip(".")
+
+        dpi = self._style.get("layout", {}).get("dpi", 300)
+        fig.savefig(
+            path, dpi=dpi, bbox_inches="tight", format=fmt, transparent=transparent
+        )
+        logger.info("Saved figure to {}", path)
+
+        if save_subplots:
+            active_axes = [ax for ax in fig.axes if ax.axison]
+            for i, ax in enumerate(active_axes):
+                subplot_path = path.parent / f"{path.stem}{subplot_suffix}_{i + 1}{ext}"
+                self.save_subplot(
+                    fig,
+                    ax,
+                    subplot_path,
+                    include_title=subplot_include_title,
+                    transparent=transparent,
+                )
+
+        return path
+
+    def save_subplot(
+        self,
+        fig: Figure,
+        ax: Axes,
+        filename: str | Path,
+        padding: float = 0.05,
         include_title: bool = True,
-        subplot_settings: dict | None = None,
-    ) -> None:
-        """Save the full figure and individual subplots."""
-        # Ensure create_figure has been called
-        if subplot_settings is None:
-            subplot_settings = {}
-        if self.fig is None or self.axes is None:
-            raise RuntimeError("Call create_figure before saving the figure.")
+        transparent: bool = False,
+    ) -> Path:
+        path = _resolve_path(filename, self.output_dir)
+        path.parent.mkdir(parents=True, exist_ok=True)
 
-        # If path does not exist, create it
-        if not self.output_dir.exists():
-            print(f"Creating output directory: {self.output_dir}")
-            self.output_dir.mkdir(parents=True, exist_ok=True)
+        ext = path.suffix
+        fmt = ext.lstrip(".") if ext else "pdf"
 
-        # Apply tight layout before saving
-        self.fig.tight_layout()
+        all_axes = fig.axes
+        original_visibility = [a.get_visible() for a in all_axes]
+        for other_ax in all_axes:
+            if other_ax is not ax:
+                other_ax.set_visible(False)
 
-        # Save the full figure
-        full_path = self.output_dir / f"{filename}{self.file_ext}"
-        try:
-            self.fig.savefig(
-                full_path,
-                dpi=self.dpi,
-                bbox_inches="tight",
-                format=self.file_ext.strip("."),
-                transparent=True,
-            )
-            print(f"Saved full figure to {full_path}")
-        except Exception as e:
-            print(f"Error saving full figure: {e}")
+        original_title = ax.get_title()
+        if not include_title:
+            ax.set_title("")
 
-        # Save each subplot separately
-        for i, ax in enumerate(self.axes):
-            subplot_path = (
-                self.output_dir / f"{filename}_subplot_{i + 1}{self.file_ext}"
-            )
-            self._save_subplot(
-                ax, subplot_path, include_title=include_title, **subplot_settings
-            )
+        dpi = self._style.get("layout", {}).get("dpi", 300)
+        bbox = _get_ax_extent(fig, ax, padding)
+        fig.savefig(
+            path, dpi=dpi, bbox_inches=bbox, format=fmt, transparent=transparent
+        )
+
+        if not include_title:
+            ax.set_title(original_title)
+        for other_ax, vis in zip(all_axes, original_visibility, strict=True):
+            other_ax.set_visible(vis)
+
+        logger.info("Saved subplot to {}", path)
+        return path

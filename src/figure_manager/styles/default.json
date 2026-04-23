@@ -1,0 +1,38 @@
+{
+  "rc": {
+    "axes.edgecolor": "0.15",
+    "axes.linewidth": 0.8,
+    "axes.grid": true,
+    "axes.grid.axis": "y",
+    "axes.grid.which": "major",
+    "grid.linestyle": "dotted",
+    "grid.linewidth": 0.5,
+    "grid.alpha": 1.0,
+    "axes.facecolor": "white",
+    "axes.titlesize": 11,
+    "font.size": 10,
+    "font.family": "serif",
+    "mathtext.fontset": "dejavuserif",
+    "lines.linewidth": 2,
+    "lines.markersize": 6,
+    "lines.markeredgewidth": 0.5,
+    "xtick.major.size": 4,
+    "xtick.major.width": 0.8,
+    "xtick.minor.size": 2,
+    "xtick.minor.width": 0.5,
+    "ytick.major.size": 4,
+    "ytick.major.width": 0.8,
+    "ytick.minor.size": 2,
+    "ytick.minor.width": 0.5,
+    "legend.frameon": false,
+    "legend.fontsize": 9,
+    "figure.facecolor": "white",
+    "figure.edgecolor": "white"
+  },
+  "layout": {
+    "dpi": 300,
+    "paper_sizes": { "A4": [8.27, 11.69], "A3": [11.69, 16.54] },
+    "page_margin": 0.5,
+    "subplot_aspect": 0.75
+  }
+}

@@ -22,7 +22,6 @@ def make_figures(
     fm = FigureManager(
         output_dir=PROJECT_ROOT / FIGURES_DIR,
         paper_size=PAPER_SIZE,
-        file_ext=FILE_EXT,
         use_latex=USE_LATEX,
     )
     make_figure_1(fm, data, VERBOSE, LOG_DIR)
@@ -31,7 +30,6 @@ def make_figures(
     fm = FigureManager(
         output_dir=PROJECT_ROOT / FIGURES_DIR,
         paper_size=PAPER_SIZE,
-        file_ext=FILE_EXT,
         use_latex=USE_LATEX,
     )
     make_figure_2(fm, data, VERBOSE, LOG_DIR)
@@ -40,7 +38,6 @@ def make_figures(
     fm = FigureManager(
         output_dir=PROJECT_ROOT / FIGURES_DIR,
         paper_size=PAPER_SIZE,
-        file_ext=FILE_EXT,
         use_latex=USE_LATEX,
     )
     make_figure_3(fm, data, VERBOSE, LOG_DIR)
@@ -62,7 +59,6 @@ def make_figure_1(fm, data, VERBOSE, LOG_DIR):
         x="school",
         y="wage",
         plot_type="plot",
-        x_bins=5,
         group_by="residence",
         agg_fct=pl.mean,
         ax=axes[0],
@@ -76,7 +72,6 @@ def make_figure_1(fm, data, VERBOSE, LOG_DIR):
         x="exper",
         y="wage",
         plot_type="plot",
-        x_bins=5,
         group_by="residence",
         agg_fct=pl.mean,
         ax=axes[1],
@@ -96,8 +91,7 @@ def make_figure_1(fm, data, VERBOSE, LOG_DIR):
         plot_settings={"alpha": 0.5},
     )
 
-    # Save the entire figure and subplots
-    fm.save_figure(filename="three_small_plots")
+    fm.save_figure(fig, filename=f"three_small_plots{FILE_EXT}")
 
 
 def make_figure_2(fm, data, VERBOSE, LOG_DIR):
@@ -172,8 +166,7 @@ def make_figure_2(fm, data, VERBOSE, LOG_DIR):
         label="Experience",
     )
 
-    # Save the entire figure and subplots
-    fm.save_figure(filename="two_std_dev_plots")
+    fm.save_figure(fig, filename=f"two_std_dev_plots{FILE_EXT}")
 
 
 def make_figure_3(fm, data, VERBOSE, LOG_DIR):
@@ -191,7 +184,6 @@ def make_figure_3(fm, data, VERBOSE, LOG_DIR):
         x="school",
         y="wage",
         plot_type="plot",
-        x_bins=5,
         group_by="residence",
         agg_fct=pl.mean,
         ax=axes[0],
@@ -200,8 +192,7 @@ def make_figure_3(fm, data, VERBOSE, LOG_DIR):
         ylabel="Wage",
     )
 
-    # Save the entire figure and subplots
-    fm.save_figure(filename="one_big_plot")
+    fm.save_figure(fig, filename=f"one_big_plot{FILE_EXT}")
 
 
 if __name__ == "__main__":
@@ -232,7 +223,6 @@ if __name__ == "__main__":
     metrics["use_latex"] = USE_LATEX
     with open(PROJECT_ROOT / "metrics.json", "w") as metrics_file:
         json.dump(metrics, metrics_file, indent=4)
-    # Call the make_figures function to generate the figures
 
     make_figures(
         EXTERNAL_DATA_PATH,
