@@ -1,2 +1,15 @@
-# figure-manager
-This repository contains a Python class, FigureManager, that simplifies the creation and saving of Matplotlib figures and subplots. It provides standardized figure sizing, LaTeX integration, and precise subplot cropping, making it ideal for generating publication-quality graphics.
+# matpublib
+
+Publication-quality Matplotlib figures with standardized sizing, LaTeX support, and subplot management.
+
+## Installation
+
+pip install matpublib
+
+## Usage
+
+from matpublib import FigureComposer
+
+fc = FigureComposer(paper_size="A4", use_latex=False)
+fig, axes = fc.create_figure(n_rows=1, n_cols=2)
+fc.save_figure(fig, "output.pdf")

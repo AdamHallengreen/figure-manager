@@ -1593,23 +1593,23 @@ name = "matpublib"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "dvc" },
     { name = "loguru" },
     { name = "matplotlib" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "polars" },
     { name = "polars-lts-cpu", marker = "sys_platform == 'darwin'" },
-    { name = "pre-commit" },
     { name = "seaborn" },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "dvc" },
     { name = "ipykernel" },
     { name = "jupyterlab" },
     { name = "notebook" },
     { name = "pip" },
+    { name = "pre-commit" },
     { name = "pytest" },
     { name = "ruff" },
     { name = "ty" },
@@ -1617,23 +1617,23 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dvc", specifier = ">=3.59.1" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "matplotlib", specifier = ">=3.10.1" },
     { name = "numpy", specifier = ">=2.2.4" },
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "polars", specifier = ">=1.26.0" },
     { name = "polars-lts-cpu", marker = "sys_platform == 'darwin'", specifier = ">=1.26.0" },
-    { name = "pre-commit", specifier = ">=4.2.0" },
     { name = "seaborn", specifier = ">=0.13.2" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "dvc", specifier = ">=3.59.1" },
     { name = "ipykernel", specifier = ">=6.29.5" },
     { name = "jupyterlab", specifier = ">=4.3.6" },
     { name = "notebook", specifier = ">=7.3.3" },
     { name = "pip", specifier = ">=25.0.1" },
+    { name = "pre-commit", specifier = ">=4.2.0" },
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "ruff", specifier = ">=0.11.2" },
     { name = "ty" },

@@ -385,7 +385,6 @@ dulwich==0.22.8 \
 dvc==3.59.1 \
     --hash=sha256:445c66f5d8304cf868ecff7b6d9428bff7879cff9545f0ac5a896572e14e14dd \
     --hash=sha256:76c9cadc97a458321845424ff91489e8a2c5c6eaf36e52a79d8609beaed78cd6
-    # via matpublib
 dvc-data==3.16.9 \
     --hash=sha256:778781718a96dbec3b090289fe0400c00c7c31ed4cc6683edad9523665a0aa81 \
     --hash=sha256:8a21ddb2f904157ae0170a172438839a5fdfc75fd310f21d591ac1db182c71f4
@@ -1090,7 +1089,6 @@ polars-lts-cpu==1.26.0 ; sys_platform == 'darwin' \
 pre-commit==4.2.0 \
     --hash=sha256:601283b9757afd87d40c4c4a9b2b5de9637a8ea02eaff7adc2d0fb4e04841146 \
     --hash=sha256:a009ca7205f1eb497d10b845e52c838a98b6cdd2102a6c8e4540e94ee75c58bd
-    # via matpublib
 prometheus-client==0.21.1 \
     --hash=sha256:252505a722ac04b0456be05c05f75f45d760c2911ffc45f2a06bcaed9f3ae3fb \
     --hash=sha256:594b45c410d6f4f8888940fe80b5cc2521b305a1fafe1c58609ef715a001f301

@@ -1,23 +1,34 @@
 [project]
 name = "matpublib"
 version = "0.1.0"
-description = "Add your description here"
+description = "Publication-quality Matplotlib figures with standardized sizing, LaTeX support, and subplot management."
 readme = "README.md"
+license = { text = "MIT" }
 authors = [
     { name = "Adam Hallengreen", email = "90259162+AdamHallengreen@users.noreply.github.com" }
 ]
+keywords = ["matplotlib", "figures", "publication", "plotting", "scientific"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
 requires-python = ">=3.12"
 dependencies = [
-    "dvc>=3.59.1",
     "loguru>=0.7.3",
     "matplotlib>=3.10.1",
     "numpy>=2.2.4",
     "pandas>=2.2.3",
     "polars>=1.26.0",
     "polars-lts-cpu>=1.26.0 ; sys_platform == 'darwin'",
-    "pre-commit>=4.2.0",
     "seaborn>=0.13.2",
 ]
+
+[project.urls]
+Repository = "https://github.com/AdamHallengreen/matpublib"
 
 [build-system]
 requires = ["hatchling"]
@@ -28,11 +39,13 @@ packages = ["src/matpublib"]
 
 [dependency-groups]
 dev = [
+    "dvc>=3.59.1",
     "ipykernel>=6.29.5",
     "jupyterlab>=4.3.6",
     "notebook>=7.3.3",
     "pip>=25.0.1",
     "ty",
+    "pre-commit>=4.2.0",
     "pytest>=8.3.5",
     "ruff>=0.11.2",
 ]
