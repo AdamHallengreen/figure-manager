@@ -385,7 +385,7 @@ dulwich==0.22.8 \
 dvc==3.59.1 \
     --hash=sha256:445c66f5d8304cf868ecff7b6d9428bff7879cff9545f0ac5a896572e14e14dd \
     --hash=sha256:76c9cadc97a458321845424ff91489e8a2c5c6eaf36e52a79d8609beaed78cd6
-    # via figure-manager
+    # via matpublib
 dvc-data==3.16.9 \
     --hash=sha256:778781718a96dbec3b090289fe0400c00c7c31ed4cc6683edad9523665a0aa81 \
     --hash=sha256:8a21ddb2f904157ae0170a172438839a5fdfc75fd310f21d591ac1db182c71f4
@@ -724,7 +724,7 @@ kombu==5.5.1 \
 loguru==0.7.3 \
     --hash=sha256:19480589e77d47b8d85b2c827ad95d49bf31b0dcde16593892eb51dd18706eb6 \
     --hash=sha256:31a33c10c8e1e10422bfd431aeb5d351c7cf7fa671e3c4df004162264b28220c
-    # via figure-manager
+    # via matpublib
 markdown-it-py==3.0.0 \
     --hash=sha256:355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1 \
     --hash=sha256:e3f60a94fa066dc52ec76661e37c851cb232d92f9886b15cb560aaada2df8feb
@@ -785,7 +785,7 @@ matplotlib==3.10.1 \
     --hash=sha256:e8d2d0e3881b129268585bf4765ad3ee73a4591d77b9a18c214ac7e3a79fb2ba \
     --hash=sha256:e9b4bb156abb8fa5e5b2b460196f7db7264fc6d62678c03457979e7d5254b7be
     # via
-    #   figure-manager
+    #   matpublib
     #   seaborn
 matplotlib-inline==0.1.7 \
     --hash=sha256:8423b23ec666be3d16e16b60bdd8ac4e86e840ebd1dd11a30b9f117f2fa0ab90 \
@@ -878,9 +878,7 @@ networkx==3.4.2 \
 nodeenv==1.9.1 \
     --hash=sha256:6ec12890a2dab7946721edbfbcd91f3319c6ccc9aec47be7c7e6b7011ee6645f \
     --hash=sha256:ba11c9782d29c27c70ffbdda2d7415098754709be8a7056d79a737cd901155c9
-    # via
-    #   pre-commit
-    #   pyright
+    # via pre-commit
 notebook==7.3.3 \
     --hash=sha256:707a313fb882d35f921989eb3d204de942ed5132a44e4aa1fe0e8f24bb9dc25d \
     --hash=sha256:b193df0878956562d5171c8e25c9252b8e86c9fcc16163b8ee3fe6c5e3f422f7
@@ -924,8 +922,8 @@ numpy==2.2.4 \
     --hash=sha256:f486038e44caa08dbd97275a9a35a283a8f1d2f0ee60ac260a1790e76660833c
     # via
     #   contourpy
-    #   figure-manager
     #   matplotlib
+    #   matpublib
     #   pandas
     #   seaborn
 omegaconf==2.3.0 \
@@ -1008,7 +1006,7 @@ pandas==2.2.3 \
     --hash=sha256:f3a255b2c19987fbbe62a9dfd6cff7ff2aa9ccab3fc75218fd4b7530f01efa24 \
     --hash=sha256:fffb8ae78d8af97f849404f21411c95062db1496aeb3e56f146f0355c9989319
     # via
-    #   figure-manager
+    #   matpublib
     #   seaborn
 pandocfilters==1.5.1 \
     --hash=sha256:002b4a555ee4ebc03f8b66307e287fa492e4a77b4ea14d3f934328297bb4939e \
@@ -1083,16 +1081,16 @@ polars==1.26.0 \
     --hash=sha256:58db2dce39cad5f8fc8e8c5c923a250eb21eff4146b03514d570d1c205a4874c \
     --hash=sha256:66c30f4b7e060c2e7f3a45d6ac94ab3b179831a2f1e629401bf7912d54311529 \
     --hash=sha256:b5492d38e5ec2ae6a8853833c5a31549194a361b901134fc5f2f57b49bd563ea
-    # via figure-manager
+    # via matpublib
 polars-lts-cpu==1.26.0 ; sys_platform == 'darwin' \
     --hash=sha256:59e65c9559a12f35164344f7b0a70e35e8630a0ebb824be6913a36772bbaa63b \
     --hash=sha256:6366b3b6ddd9ee6560c4d804c44e419691bb564c44bcc848e1f2e49b7cf0b41e \
     --hash=sha256:639939cf66f7cf6fbcac05a13155dd5400f944d3d6afef06797e3161b24041c6
-    # via figure-manager
+    # via matpublib
 pre-commit==4.2.0 \
     --hash=sha256:601283b9757afd87d40c4c4a9b2b5de9637a8ea02eaff7adc2d0fb4e04841146 \
     --hash=sha256:a009ca7205f1eb497d10b845e52c838a98b6cdd2102a6c8e4540e94ee75c58bd
-    # via figure-manager
+    # via matpublib
 prometheus-client==0.21.1 \
     --hash=sha256:252505a722ac04b0456be05c05f75f45d760c2911ffc45f2a06bcaed9f3ae3fb \
     --hash=sha256:594b45c410d6f4f8888940fe80b5cc2521b305a1fafe1c58609ef715a001f301
@@ -1264,9 +1262,6 @@ pyparsing==3.2.3 \
     #   grandalf
     #   matplotlib
     #   pydot
-pyright==1.1.398 \
-    --hash=sha256:0a70bfd007d9ea7de1cf9740e1ad1a40a122592cfe22a3f6791b06162ad08753 \
-    --hash=sha256:357a13edd9be8082dc73be51190913e475fa41a6efb6ec0d4b7aab3bc11638d8
 pytest==8.3.5 \
     --hash=sha256:c69214aa47deac29fad6c2a4f590b9c4a9fdb16a403176fe154b79c0b4d4d820 \
     --hash=sha256:f4efe70cc14e511565ac476b57c279e12a855b11f48f212af1080ef2263d3845
@@ -1499,7 +1494,7 @@ scmrepo==3.3.10 \
 seaborn==0.13.2 \
     --hash=sha256:636f8336facf092165e27924f223d3c62ca560b1f2bb5dff7ab7fad265361987 \
     --hash=sha256:93e60a40988f4d65e9f4885df477e2fdaff6b73a9ded434c1ab356dd57eefff7
-    # via figure-manager
+    # via matpublib
 semver==3.0.4 \
     --hash=sha256:9c824d87ba7f7ab4a1890799cec8596f15c1241cb473404ea1cb0c55e4b04746 \
     --hash=sha256:afc7d8c584a5ed0a11033af086e8af226a9c0b206f313e0301f8dd7b6b589602
@@ -1618,6 +1613,24 @@ traitlets==5.14.3 \
     #   nbclient
     #   nbconvert
     #   nbformat
+ty==0.0.32 \
+    --hash=sha256:06f17ada3e069cba6148342ef88e9929156beca8473e8d4f101b68f66c75643e \
+    --hash=sha256:2850561f9b018ae33d7e5bbfa0ac414d3c518513edcffe43877dc9801446b9c5 \
+    --hash=sha256:2b89969307ab2417d41c9be8059dd79feea577234e1e10d35132f5495e0d42c6 \
+    --hash=sha256:2ff2ebb4986b24aebcf1444db7db5ca41b36086040e95eea9f8fb851c11e805c \
+    --hash=sha256:4787ac9fe1f86b1f3133f5c6732adbe2df5668b50c679ac6e2d98cd284da812f \
+    --hash=sha256:583c7094f4574b02f724db924f98b804d1387a0bd9405ecb5e078cc0f47fbcfb \
+    --hash=sha256:7e10aadbdbda989a7d567ee6a37f8b98d4d542e31e3b190a2879fd581f75d658 \
+    --hash=sha256:8300caf35345498e9b9b03e550bba03cee8f5f5f8ab4c83c3b1ff1b7403b7d3a \
+    --hash=sha256:8743174c5f920f6700a4a0c9de140109189192ba16226884cd50095b43b8a45c \
+    --hash=sha256:914bbc4f605ce2a9e2a78982e28fae1d3359a169d141f9dc3b4c7749cd5eca81 \
+    --hash=sha256:9b59868ede9b1d69a088f0d695df52a0061f95fa7baa1d5e0dc6fc9cf06e1334 \
+    --hash=sha256:b5fa2fb3c614349ee211d36476b49d88c5ef79a687cdb91b2872ad023b94d2f8 \
+    --hash=sha256:ba7284a4a954b598c1b31500352b3ec1f89bff533825592b5958848226fdc7ee \
+    --hash=sha256:d8ea0a728af99fe40dd744cba6441a2404f80b7f4bde17aa6da393810af5ea57 \
+    --hash=sha256:dacbc2f6cd698d488ae7436838ff929570455bf94bfa4d9fe57a630c552aff83 \
+    --hash=sha256:e44ebe1bb4143a5628bc4db67ac0dfebe14594af671e4ee66f6f2e983da56501 \
+    --hash=sha256:e96e60fa556cec04f15d7ea62d2ceee5982bd389233e961ab9fd42304e278175
 typer==0.15.2 \
     --hash=sha256:46a499c6107d645a9c13f7ee46c5d5096cae6f5fc57dd11eccbbb9ae3e44ddfc \
     --hash=sha256:ab2fab47533a813c49fe1f16b1a370fd5819099c00b119e0633df65f22144ba5
@@ -1635,7 +1648,6 @@ typing-extensions==4.12.2 \
     #   beautifulsoup4
     #   pydantic
     #   pydantic-core
-    #   pyright
     #   referencing
     #   typer
 tzdata==2025.1 \

@@ -825,57 +825,6 @@ wheels = [
 ]
 
 [[package]]
-name = "figure-manager"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "dvc" },
-    { name = "loguru" },
-    { name = "matplotlib" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "polars" },
-    { name = "polars-lts-cpu", marker = "sys_platform == 'darwin'" },
-    { name = "pre-commit" },
-    { name = "seaborn" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "ipykernel" },
-    { name = "jupyterlab" },
-    { name = "notebook" },
-    { name = "pip" },
-    { name = "pytest" },
-    { name = "ruff" },
-    { name = "ty" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "dvc", specifier = ">=3.59.1" },
-    { name = "loguru", specifier = ">=0.7.3" },
-    { name = "matplotlib", specifier = ">=3.10.1" },
-    { name = "numpy", specifier = ">=2.2.4" },
-    { name = "pandas", specifier = ">=2.2.3" },
-    { name = "polars", specifier = ">=1.26.0" },
-    { name = "polars-lts-cpu", marker = "sys_platform == 'darwin'", specifier = ">=1.26.0" },
-    { name = "pre-commit", specifier = ">=4.2.0" },
-    { name = "seaborn", specifier = ">=0.13.2" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "ipykernel", specifier = ">=6.29.5" },
-    { name = "jupyterlab", specifier = ">=4.3.6" },
-    { name = "notebook", specifier = ">=7.3.3" },
-    { name = "pip", specifier = ">=25.0.1" },
-    { name = "pytest", specifier = ">=8.3.5" },
-    { name = "ruff", specifier = ">=0.11.2" },
-    { name = "ty" },
-]
-
-[[package]]
 name = "filelock"
 version = "3.18.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1637,6 +1586,57 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/99/5b/a36a337438a14116b16480db471ad061c36c3694df7c2084a0da7ba538b7/matplotlib_inline-0.1.7.tar.gz", hash = "sha256:8423b23ec666be3d16e16b60bdd8ac4e86e840ebd1dd11a30b9f117f2fa0ab90", size = 8159, upload-time = "2024-04-15T13:44:44.803Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8f/8e/9ad090d3553c280a8060fbf6e24dc1c0c29704ee7d1c372f0c174aa59285/matplotlib_inline-0.1.7-py3-none-any.whl", hash = "sha256:df192d39a4ff8f21b1895d72e6a13f5fcc5099f00fa84384e0ea28c2cc0653ca", size = 9899, upload-time = "2024-04-15T13:44:43.265Z" },
+]
+
+[[package]]
+name = "matpublib"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "dvc" },
+    { name = "loguru" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "polars" },
+    { name = "polars-lts-cpu", marker = "sys_platform == 'darwin'" },
+    { name = "pre-commit" },
+    { name = "seaborn" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "ipykernel" },
+    { name = "jupyterlab" },
+    { name = "notebook" },
+    { name = "pip" },
+    { name = "pytest" },
+    { name = "ruff" },
+    { name = "ty" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "dvc", specifier = ">=3.59.1" },
+    { name = "loguru", specifier = ">=0.7.3" },
+    { name = "matplotlib", specifier = ">=3.10.1" },
+    { name = "numpy", specifier = ">=2.2.4" },
+    { name = "pandas", specifier = ">=2.2.3" },
+    { name = "polars", specifier = ">=1.26.0" },
+    { name = "polars-lts-cpu", marker = "sys_platform == 'darwin'", specifier = ">=1.26.0" },
+    { name = "pre-commit", specifier = ">=4.2.0" },
+    { name = "seaborn", specifier = ">=0.13.2" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "ipykernel", specifier = ">=6.29.5" },
+    { name = "jupyterlab", specifier = ">=4.3.6" },
+    { name = "notebook", specifier = ">=7.3.3" },
+    { name = "pip", specifier = ">=25.0.1" },
+    { name = "pytest", specifier = ">=8.3.5" },
+    { name = "ruff", specifier = ">=0.11.2" },
+    { name = "ty" },
 ]
 
 [[package]]

@@ -37,7 +37,7 @@ def _load_style(source: str | Path | dict) -> dict:  # type: ignore[type-arg]
     if isinstance(source, dict):
         return source
     if isinstance(source, str):
-        ref = files("figure_manager") / "styles" / f"{source}.json"
+        ref = files("matpublib") / "styles" / f"{source}.json"
         return json.loads(ref.read_text(encoding="utf-8"))
     return json.loads(Path(source).read_text(encoding="utf-8"))
 
@@ -48,7 +48,7 @@ def _load_palette(source: str | Path | dict | list) -> dict:  # type: ignore[typ
     if isinstance(source, list):
         return {"colors": source}
     if isinstance(source, str):
-        ref = files("figure_manager") / "palettes" / f"{source}.json"
+        ref = files("matpublib") / "palettes" / f"{source}.json"
         return json.loads(ref.read_text(encoding="utf-8"))
     return json.loads(Path(source).read_text(encoding="utf-8"))
 
@@ -125,7 +125,7 @@ def _resolve_path(filename: str | Path, output_dir: Path | None) -> Path:
     return base / p
 
 
-class FigureManager:
+class FigureComposer:
     def __init__(
         self,
         output_dir: Path | str | None = None,

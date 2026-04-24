@@ -8,7 +8,7 @@ import yaml
 from loguru import logger
 from polars import col as c
 
-from figure_manager import FigureManager, generate_plot
+from matpublib import FigureComposer, generate_plot
 from utils.find_project_root import find_project_root
 
 
@@ -19,31 +19,31 @@ def make_figures(
     data = pl.read_csv(PROJECT_ROOT / EXTERNAL_DATA_PATH / "Males.csv")
 
     # Make figure 1
-    fm = FigureManager(
+    fc = FigureComposer(
         output_dir=PROJECT_ROOT / FIGURES_DIR,
         paper_size=PAPER_SIZE,
         use_latex=USE_LATEX,
     )
-    make_figure_1(fm, data, VERBOSE, LOG_DIR)
+    make_figure_1(fc, data, VERBOSE, LOG_DIR)
 
     # make figure 2
-    fm = FigureManager(
+    fc = FigureComposer(
         output_dir=PROJECT_ROOT / FIGURES_DIR,
         paper_size=PAPER_SIZE,
         use_latex=USE_LATEX,
     )
-    make_figure_2(fm, data, VERBOSE, LOG_DIR)
+    make_figure_2(fc, data, VERBOSE, LOG_DIR)
 
     # make figure 3
-    fm = FigureManager(
+    fc = FigureComposer(
         output_dir=PROJECT_ROOT / FIGURES_DIR,
         paper_size=PAPER_SIZE,
         use_latex=USE_LATEX,
     )
-    make_figure_3(fm, data, VERBOSE, LOG_DIR)
+    make_figure_3(fc, data, VERBOSE, LOG_DIR)
 
 
-def make_figure_1(fm, data, VERBOSE, LOG_DIR):
+def make_figure_1(fc, data, VERBOSE, LOG_DIR):
     if VERBOSE:
         logger.add(
             PROJECT_ROOT / LOG_DIR / "figure_1_{time:YYYY-MM-DD_HH-mm}.log",
@@ -52,7 +52,7 @@ def make_figure_1(fm, data, VERBOSE, LOG_DIR):
         )
 
     # Create figure and subplot managers with specified layout
-    fig, axes = fm.create_figure(n_rows=2, n_cols=2, n_subplots=3)
+    fig, axes = fc.create_figure(n_rows=2, n_cols=2, n_subplots=3)
 
     axes[0] = generate_plot(
         data,
@@ -91,10 +91,10 @@ def make_figure_1(fm, data, VERBOSE, LOG_DIR):
         plot_settings={"alpha": 0.5},
     )
 
-    fm.save_figure(fig, filename=f"three_small_plots{FILE_EXT}")
+    fc.save_figure(fig, filename=f"three_small_plots{FILE_EXT}")
 
 
-def make_figure_2(fm, data, VERBOSE, LOG_DIR):
+def make_figure_2(fc, data, VERBOSE, LOG_DIR):
     if VERBOSE:
         logger.add(
             PROJECT_ROOT / LOG_DIR / "figure_2_{time:YYYY-MM-DD_HH-mm}.log",
@@ -119,7 +119,7 @@ def make_figure_2(fm, data, VERBOSE, LOG_DIR):
     )
 
     # Create figure and subplot managers with specified layout
-    fig, axes = fm.create_figure(n_rows=1, n_cols=2, n_subplots=2)
+    fig, axes = fc.create_figure(n_rows=1, n_cols=2, n_subplots=2)
 
     axes[0] = generate_plot(
         cd,
@@ -166,10 +166,10 @@ def make_figure_2(fm, data, VERBOSE, LOG_DIR):
         label="Experience",
     )
 
-    fm.save_figure(fig, filename=f"two_std_dev_plots{FILE_EXT}")
+    fc.save_figure(fig, filename=f"two_std_dev_plots{FILE_EXT}")
 
 
-def make_figure_3(fm, data, VERBOSE, LOG_DIR):
+def make_figure_3(fc, data, VERBOSE, LOG_DIR):
     if VERBOSE:
         logger.add(
             PROJECT_ROOT / LOG_DIR / "figure_3_{time:YYYY-MM-DD_HH-mm}.log",
@@ -177,7 +177,7 @@ def make_figure_3(fm, data, VERBOSE, LOG_DIR):
             retention=1,
         )
     # Create figure and subplot managers with specified layout
-    fig, axes = fm.create_figure(n_rows=1, n_cols=1, n_subplots=1)
+    fig, axes = fc.create_figure(n_rows=1, n_cols=1, n_subplots=1)
 
     axes[0] = generate_plot(
         data,
@@ -192,7 +192,7 @@ def make_figure_3(fm, data, VERBOSE, LOG_DIR):
         ylabel="Wage",
     )
 
-    fm.save_figure(fig, filename=f"one_big_plot{FILE_EXT}")
+    fc.save_figure(fig, filename=f"one_big_plot{FILE_EXT}")
 
 
 if __name__ == "__main__":
@@ -205,10 +205,10 @@ if __name__ == "__main__":
 
     PROJECT_ROOT = find_project_root(__file__)
     EXTERNAL_DATA_PATH = Path(params["data_etl"]["external_data_path"])
-    FIGURES_DIR = Path(params["figure_manager"]["figures_dir"])
-    PAPER_SIZE: str = params["figure_manager"]["paper_size"]
-    FILE_EXT: str = params["figure_manager"]["file_ext"]
-    USE_LATEX: bool = params["figure_manager"]["use_latex"]
+    FIGURES_DIR = Path(params["matpublib"]["figures_dir"])
+    PAPER_SIZE: str = params["matpublib"]["paper_size"]
+    FILE_EXT: str = params["matpublib"]["file_ext"]
+    USE_LATEX: bool = params["matpublib"]["use_latex"]
     VERBOSE: bool = params["plotter"]["verbose"]
     LOG_DIR: bool = Path(params["plotter"]["log_dir"])
 

@@ -1,5 +1,5 @@
 [project]
-name = "figure-manager"
+name = "matpublib"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -24,7 +24,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/figure_manager"]
+packages = ["src/matpublib"]
 
 [dependency-groups]
 dev = [

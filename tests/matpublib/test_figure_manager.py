@@ -11,9 +11,9 @@ import pytest
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from figure_manager.figure_manager import (
+from matpublib.composer import (
+    FigureComposer,
     CycleConfig,
-    FigureManager,
     _build_prop_cycle,
     _build_rc_params,
     _get_figure_size,
@@ -40,8 +40,8 @@ def deep_palette():
 
 
 @pytest.fixture
-def fm(tmp_path):
-    return FigureManager(output_dir=tmp_path, use_latex=False)
+def fc(tmp_path):
+    return FigureComposer(output_dir=tmp_path, use_latex=False)
 
 
 # --- _resolve_path ---
@@ -231,75 +231,75 @@ def test_get_figure_size_unknown_paper_falls_back_to_a4(default_style):
     assert h_unk == h_a4
 
 
-# --- FigureManager.__init__ ---
+# --- FigureComposer.__init__ ---
 
 
 def test_init_no_output_dir_no_warning(capfd):
-    FigureManager(use_latex=False)
+    FigureComposer(use_latex=False)
     assert "output_dir" not in capfd.readouterr().err
 
 
 def test_init_with_output_dir_sets_attr(tmp_path):
-    fm = FigureManager(output_dir=tmp_path, use_latex=False)
-    assert fm.output_dir == tmp_path
+    fc = FigureComposer(output_dir=tmp_path, use_latex=False)
+    assert fc.output_dir == tmp_path
 
 
 def test_init_stores_attrs():
-    fm = FigureManager(
+    fc = FigureComposer(
         paper_size="A3", use_latex=False, style="default", palette="deep"
     )  # noqa: E501
-    assert fm.paper_size == "A3"
-    assert not fm.use_latex
-    assert isinstance(fm._style, dict)
-    assert isinstance(fm._palette, dict)
-    assert isinstance(fm._rc_params, dict)
+    assert fc.paper_size == "A3"
+    assert not fc.use_latex
+    assert isinstance(fc._style, dict)
+    assert isinstance(fc._palette, dict)
+    assert isinstance(fc._rc_params, dict)
 
 
 # --- create_figure ---
 
 
-def test_create_figure_1x1(fm):
-    fig, axes = fm.create_figure(1, 1)
+def test_create_figure_1x1(fc):
+    fig, axes = fc.create_figure(1, 1)
     assert isinstance(fig, Figure)
     assert len(axes) == 1
     assert isinstance(axes[0], Axes)
 
 
-def test_create_figure_default_n_subplots(fm):
-    _, axes = fm.create_figure(2, 2)
+def test_create_figure_default_n_subplots(fc):
+    _, axes = fc.create_figure(2, 2)
     assert len(axes) == 4
 
 
-def test_create_figure_partial_subplots(fm):
-    fig, axes = fm.create_figure(2, 2, n_subplots=3)
+def test_create_figure_partial_subplots(fc):
+    fig, axes = fc.create_figure(2, 2, n_subplots=3)
     assert len(axes) == 3
     inactive = [ax for ax in fig.axes if not ax.axison]
     assert len(inactive) == 1
 
 
-def test_create_figure_invalid_n_subplots(fm):
+def test_create_figure_invalid_n_subplots(fc):
     with pytest.raises(ValueError):
-        fm.create_figure(2, 2, n_subplots=5)
+        fc.create_figure(2, 2, n_subplots=5)
 
 
-def test_create_figure_landscape_wider(fm):
-    fig_p, _ = fm.create_figure(1, 1, landscape=False)
+def test_create_figure_landscape_wider(fc):
+    fig_p, _ = fc.create_figure(1, 1, landscape=False)
     w_p, h_p = fig_p.get_size_inches()
-    fig_l, _ = fm.create_figure(1, 1, landscape=True)
+    fig_l, _ = fc.create_figure(1, 1, landscape=True)
     w_l, _ = fig_l.get_size_inches()
     assert w_l > w_p
 
 
-def test_create_figure_with_cycle_config(fm):
-    _, _ = fm.create_figure(1, 1, cycle=CycleConfig(cycle_linestyles=True))
+def test_create_figure_with_cycle_config(fc):
+    _, _ = fc.create_figure(1, 1, cycle=CycleConfig(cycle_linestyles=True))
     # Verify rc_context applied prop_cycle with linestyle during figure creation
     # (no global state change — just confirm no error and figure returned cleanly)
 
 
 def test_create_figure_no_global_rc_pollution():
     original_usetex = mpl.rcParams["text.usetex"]
-    fm = FigureManager(use_latex=False)
-    fm.create_figure(1, 1)
+    fc = FigureComposer(use_latex=False)
+    fc.create_figure(1, 1)
     assert mpl.rcParams["text.usetex"] == original_usetex
 
 
@@ -317,57 +317,57 @@ def test_create_figure_no_global_rc_pollution():
         "full_sequential",
     ],
 )
-def test_cycle_preset_string(fm, preset):
-    fig, axes = fm.create_figure(1, 1, cycle=preset)
+def test_cycle_preset_string(fc, preset):
+    fig, axes = fc.create_figure(1, 1, cycle=preset)
     assert len(axes) == 1
 
 
-def test_cycle_preset_unknown_raises(fm):
+def test_cycle_preset_unknown_raises(fc):
     with pytest.raises(ValueError, match="Unknown cycle preset"):
-        fm.create_figure(1, 1, cycle="bad")
+        fc.create_figure(1, 1, cycle="bad")
 
 
 # --- save_figure ---
 
 
-def test_save_figure_creates_file(fm, tmp_path):
-    fig, _ = fm.create_figure(1, 1)
-    path = fm.save_figure(fig, tmp_path / "out.pdf")
+def test_save_figure_creates_file(fc, tmp_path):
+    fig, _ = fc.create_figure(1, 1)
+    path = fc.save_figure(fig, tmp_path / "out.pdf")
     assert path.exists()
     assert path.suffix == ".pdf"
 
 
-def test_save_figure_returns_path(fm, tmp_path):
-    fig, _ = fm.create_figure(1, 1)
-    result = fm.save_figure(fig, tmp_path / "out.pdf")
+def test_save_figure_returns_path(fc, tmp_path):
+    fig, _ = fc.create_figure(1, 1)
+    result = fc.save_figure(fig, tmp_path / "out.pdf")
     assert isinstance(result, type(tmp_path))
 
 
-def test_save_figure_no_extension_defaults_to_pdf(fm, tmp_path):
-    fig, _ = fm.create_figure(1, 1)
-    path = fm.save_figure(fig, tmp_path / "out")
+def test_save_figure_no_extension_defaults_to_pdf(fc, tmp_path):
+    fig, _ = fc.create_figure(1, 1)
+    path = fc.save_figure(fig, tmp_path / "out")
     assert path.suffix == ".pdf"
     assert path.exists()
 
 
-def test_save_figure_absolute_path_ignores_output_dir(fm, tmp_path):
+def test_save_figure_absolute_path_ignores_output_dir(fc, tmp_path):
     other_dir = tmp_path / "other"
     other_dir.mkdir()
-    fig, _ = fm.create_figure(1, 1)
-    path = fm.save_figure(fig, other_dir / "out.pdf")
+    fig, _ = fc.create_figure(1, 1)
+    path = fc.save_figure(fig, other_dir / "out.pdf")
     assert path.parent == other_dir
 
 
-def test_save_figure_save_subplots(fm, tmp_path):
-    fig, _ = fm.create_figure(1, 2, n_subplots=2)
-    fm.save_figure(fig, tmp_path / "fig.pdf", save_subplots=True)
+def test_save_figure_save_subplots(fc, tmp_path):
+    fig, _ = fc.create_figure(1, 2, n_subplots=2)
+    fc.save_figure(fig, tmp_path / "fig.pdf", save_subplots=True)
     assert (tmp_path / "fig_subplot_1.pdf").exists()
     assert (tmp_path / "fig_subplot_2.pdf").exists()
 
 
-def test_save_figure_custom_subplot_suffix(fm, tmp_path):
-    fig, _ = fm.create_figure(1, 2, n_subplots=2)
-    fm.save_figure(
+def test_save_figure_custom_subplot_suffix(fc, tmp_path):
+    fig, _ = fc.create_figure(1, 2, n_subplots=2)
+    fc.save_figure(
         fig, tmp_path / "fig.pdf", save_subplots=True, subplot_suffix="_panel"
     )
     assert (tmp_path / "fig_panel_1.pdf").exists()
@@ -377,20 +377,20 @@ def test_save_figure_custom_subplot_suffix(fm, tmp_path):
 # --- save_subplot ---
 
 
-def test_save_subplot_creates_file(fm, tmp_path):
-    fig, axes = fm.create_figure(1, 1)
-    path = fm.save_subplot(fig, axes[0], tmp_path / "sub.pdf")
+def test_save_subplot_creates_file(fc, tmp_path):
+    fig, axes = fc.create_figure(1, 1)
+    path = fc.save_subplot(fig, axes[0], tmp_path / "sub.pdf")
     assert path.exists()
 
 
-def test_save_subplot_restores_title(fm, tmp_path):
-    fig, axes = fm.create_figure(1, 1)
+def test_save_subplot_restores_title(fc, tmp_path):
+    fig, axes = fc.create_figure(1, 1)
     axes[0].set_title("My Title")
-    fm.save_subplot(fig, axes[0], tmp_path / "sub.pdf", include_title=False)
+    fc.save_subplot(fig, axes[0], tmp_path / "sub.pdf", include_title=False)
     assert axes[0].get_title() == "My Title"
 
 
-def test_save_subplot_restores_axis_visibility(fm, tmp_path):
-    fig, axes = fm.create_figure(1, 2, n_subplots=2)
-    fm.save_subplot(fig, axes[0], tmp_path / "sub.pdf")
+def test_save_subplot_restores_axis_visibility(fc, tmp_path):
+    fig, axes = fc.create_figure(1, 2, n_subplots=2)
+    fc.save_subplot(fig, axes[0], tmp_path / "sub.pdf")
     assert all(ax.get_visible() for ax in fig.axes if ax.axison)

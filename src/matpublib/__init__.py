@@ -1,11 +1,11 @@
-# figure_manager/__init__.py
-from .figure_manager import CycleConfig, FigureManager
+# matpublib/__init__.py
+from .composer import CycleConfig, FigureComposer
 from .plotter import generate_plot
 
 __version__ = "0.1.0"
 
 __all__ = [
-    "FigureManager",
+    "FigureComposer",
     "CycleConfig",
     "generate_plot",
 ]

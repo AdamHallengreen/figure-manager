@@ -44,7 +44,7 @@ jobs:
           python-version-file: ".python-version"
 
       - name: Run ty
-        run: uv run ty check src/figure_manager src/utils
+        run: uv run ty check src/matpublib src/utils
 
   test:
     name: Test
@@ -102,7 +102,7 @@ jobs:
       - name: Get file extension and convert PDF if needed
         id: get_ext
         run: |
-          FILE_EXT=$(yq '.figure_manager.file_ext' params.yaml)
+          FILE_EXT=$(yq '.matpublib.file_ext' params.yaml)
 
           if [[ "$FILE_EXT" == '".pdf"' ]]; then
             mogrify -format png outputs/figures/three_small_plots.pdf

@@ -1,7 +1,7 @@
 data_etl:
   external_data_path: data/
 
-figure_manager:
+matpublib:
   figures_dir: outputs/figures
   paper_size: A4
   file_ext: .jpg

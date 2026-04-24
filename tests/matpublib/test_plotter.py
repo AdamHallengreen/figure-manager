@@ -5,7 +5,7 @@ import pytest
 matplotlib.use("Agg")  # Use a non-interactive backend for testing
 import matplotlib.pyplot as plt
 
-from figure_manager.plotter import (
+from matpublib.plotter import (
     _get_min_count_info,
     _prepare_plot_data,
     _sort_groups,

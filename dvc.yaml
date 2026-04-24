@@ -5,20 +5,20 @@ stages:
     - data/Males.csv
     params:
     - data_etl.external_data_path
-    - figure_manager.figures_dir
-    - figure_manager.paper_size
-    - figure_manager.file_ext
-    - figure_manager.use_latex
+    - matpublib.figures_dir
+    - matpublib.paper_size
+    - matpublib.file_ext
+    - matpublib.use_latex
     - plotter.verbose
     outs:
-    - outputs/figures/three_small_plots${figure_manager.file_ext}
-    - outputs/figures/three_small_plots_subplot_2${figure_manager.file_ext} 
-    - outputs/figures/three_small_plots_subplot_1${figure_manager.file_ext} 
-    - outputs/figures/three_small_plots_subplot_3${figure_manager.file_ext} 
-    - outputs/figures/two_std_dev_plots_subplot_1${figure_manager.file_ext} 
-    - outputs/figures/two_std_dev_plots_subplot_2${figure_manager.file_ext} 
-    - outputs/figures/two_std_dev_plots${figure_manager.file_ext}
-    - outputs/figures/one_big_plot${figure_manager.file_ext}
-    - outputs/figures/one_big_plot_subplot_1${figure_manager.file_ext}
+    - outputs/figures/three_small_plots${matpublib.file_ext}
+    - outputs/figures/three_small_plots_subplot_2${matpublib.file_ext} 
+    - outputs/figures/three_small_plots_subplot_1${matpublib.file_ext} 
+    - outputs/figures/three_small_plots_subplot_3${matpublib.file_ext} 
+    - outputs/figures/two_std_dev_plots_subplot_1${matpublib.file_ext} 
+    - outputs/figures/two_std_dev_plots_subplot_2${matpublib.file_ext} 
+    - outputs/figures/two_std_dev_plots${matpublib.file_ext}
+    - outputs/figures/one_big_plot${matpublib.file_ext}
+    - outputs/figures/one_big_plot_subplot_1${matpublib.file_ext}
 metrics:
   - metrics.json
